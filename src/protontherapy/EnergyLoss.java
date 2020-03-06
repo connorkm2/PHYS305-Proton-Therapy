@@ -24,8 +24,8 @@ class EnergyLoss
         K = 0.307075; // MeV m^2
         
         // For a muon
-        z = -1; //incident particle charge
-        M = 106; // MeV
+        z = 1; //incident particle charge
+        M = 938; // MeV
     }
     
     public double getEnergyLoss(Particle p)
