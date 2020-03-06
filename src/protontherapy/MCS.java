@@ -15,7 +15,7 @@ class MCS
         rho = rho_in;
         
         //for a muon
-        z = -1;
+        //z = -1;
     }
 
     public double getX0()
@@ -36,7 +36,8 @@ class MCS
     public double getTheta0(Particle part, double x)
     {
         double X0 = getX0();
-        double var1 = z*Math.sqrt(x/X0)*(1+(0.038*Math.log(x/X0)));
+        double Q = part.Q;
+        double var1 = Q*Math.sqrt(x/X0)*(1+(0.038*Math.log(x/X0)));
         double Theta0 = -(13.6/(part.beta()*part.momentum()))*var1;// shall return Theta0 for material thickness x
 //        
 //        System.out.println("fish");
