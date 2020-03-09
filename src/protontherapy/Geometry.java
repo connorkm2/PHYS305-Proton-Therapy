@@ -52,8 +52,8 @@ class Geometry
         Z = new double[maxShapes];
         A = new double[maxShapes];
         shapes = new double[maxShapes][];
-        gainedE = new double[1000];
-        z = new float[1000];
+        gainedE = new double[100000];
+        z = new float[100000];
         
         Eloss = new EnergyLoss[maxShapes];
         MultScatter = new MCS[maxShapes];
@@ -175,6 +175,7 @@ class Geometry
             gainedE[lastpos] = E;
             z[lastpos] = (float)p.z;
             //System.out.println(z[lastpos]);
+            //System.out.println(lastpos);
             lastpos++;
         }
     }

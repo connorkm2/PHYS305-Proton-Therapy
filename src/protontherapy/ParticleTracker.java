@@ -60,15 +60,16 @@ public class ParticleTracker
                 
             // implement Energy Loss, uncomment to use
             if (output.E() > output.mass()) {
-            Experiment.doEloss(output, output.distance(lastStep));
+                Experiment.doEloss(output, output.distance(lastStep));
             }
             
             // store the current position/mometum
             storeTrack.savePositionMomentum(output);
 
             // Abort if particle stopped moving
+            //System.out.println(output.momentum());
             if (output.momentum() <= 0.) {
-                // System.out.println("Particle out of energy, done.");
+                System.out.println("Particle out of energy, done.");
                 break;
             }
 
@@ -76,9 +77,9 @@ public class ParticleTracker
 
             // !large debug output!
             // this should be commented in "production runs"
-            // System.out.println("After step " + n);
-            // output.print();
-            // System.out.println("In volume " + lastVolume);
+             System.out.println("After step " + n);
+             output.print();
+             System.out.println("In volume " + lastVolume);
             // end of debug output
 
             if (!Experiment.isInVolume(output, 0)) {
