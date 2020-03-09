@@ -1,5 +1,8 @@
 package protontherapy;
 
+import java.io.*;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Random;
 
 class Geometry
@@ -30,11 +33,15 @@ class Geometry
     private double [] A;
 
     private double [][] shapes;
+    double [] gainedE;
+    float [] z;
     
     private EnergyLoss [] Eloss;
     private MCS [] MultScatter;
 
     private double minfeaturesize;
+    
+    int lastpos;
 
     public Geometry(double featuresize)
     {
@@ -45,6 +52,8 @@ class Geometry
         Z = new double[maxShapes];
         A = new double[maxShapes];
         shapes = new double[maxShapes][];
+        gainedE = new double[1000];
+        z = new float[1000];
         
         Eloss = new EnergyLoss[maxShapes];
         MultScatter = new MCS[maxShapes];
@@ -156,7 +165,36 @@ class Geometry
         if (volume >= 1) {
             double lostE = Eloss[volume].getEnergyLoss(p)*dist;
             p.reduceEnergy(lostE);
+            gainEnergy(p, lostE);
         }
+    }
+    
+    public void gainEnergy(Particle p, double E){
+        int id = getVolume(p);
+        if(isInVolume(p, id)){
+            gainedE[lastpos] = E;
+            z[lastpos] = (float)p.z;
+            //System.out.println(z[lastpos]);
+            lastpos++;
+        }
+    }
+    
+    public void writeEnergyGained(String filename){
+        PrintWriter outputFile;
+        try {
+            outputFile = new PrintWriter(filename);
+        } catch (IOException e) {
+            System.err.println("Failed to open file " + filename + ". Track data was not saved.");
+            return;
+        }
+        
+                // now make a loop to write the contents of the arrays to disk, one number at a time
+        outputFile.println("z[m], E [MeV]");
+        for (int n = 0; n < lastpos; n++) {
+            // comma separated values
+            outputFile.println(z[n] + "," + gainedE[n]);
+        }
+        outputFile.close(); // close the output file
     }
     
     public void doMultScatter(Particle p, double dist)
