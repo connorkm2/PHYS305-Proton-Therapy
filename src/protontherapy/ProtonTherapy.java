@@ -58,7 +58,10 @@ class ProtonTherapy
     static final double startAngle = 0;      // Radians
     
     // Number of events to simulate
-    static final int numberOfEvents = 10;
+    static final int numberOfEvents = 1;    // Keep as 1 
+    
+    // Number of particles to generate 
+    static final int numberOfParticles = 1;
     
     static final double delta = 0.2; // for det hists
     static final double delta_A = 0.05; //For first 4 hists gen and sim theta
@@ -94,7 +97,7 @@ class ProtonTherapy
         
         // Define the genotrical properties of the experiment in method SetupExperiment()
         Geometry Experiment = SetupExperiment();
-        
+                
         // start of main loop: run the simulation numberOfEvents times
         for (int nev = 0; nev < numberOfEvents; nev++) {
 
@@ -111,9 +114,9 @@ class ProtonTherapy
             Track [] Tracks_sim = new Track[Particles_gen.length];
 
             for (int ip = 0; ip < Particles_gen.length; ip++) {
-                // some output (need to disable before running large numbers of events!)
-                // System.out.println("Simulating particle " + ip + " of event " + nev);
-                // Particles_gen[ip].print();
+                 //some output (need to disable before running large numbers of events!)
+                 System.out.println("Simulating particle " + ip + " of event " + nev);
+                 Particles_gen[ip].print();
 
                 ParticleTracker tracker = new ParticleTracker(Particles_gen[ip], time, nsteps, useRungeKutta4);
 
@@ -129,6 +132,7 @@ class ProtonTherapy
                 // write scatter plot for event 0, particle 0 to disk into file "output_particle.csv"
                 if (nev == 0 && ip == 0) {
                     Tracks_sim[ip].writeToDisk("output_particle.csv");
+                    Experiment.writeEnergyGained("waterProps.csv");
                 }
             }
             // end of simulated particle propagation
@@ -215,6 +219,7 @@ class ProtonTherapy
             //System.out.println(smearing);
 
             // end of analysis
+            
 
         }
         // end of main event loop
@@ -246,7 +251,6 @@ class ProtonTherapy
     {
         // example setup the experiment
 
-        final double ironThickness = 0.01; // m
         Geometry Experiment = new Geometry(minfeaturesize);
         
         // this line defines the size of the experiment in vacuum
@@ -256,21 +260,21 @@ class ProtonTherapy
 
         // Block of tantalum of thickness 1cm
         Experiment.AddCuboid(-0.20, -0.20, 0.1,            // start x, y, z
-                             0.20, 0.20, 0.01,   // end   x, y, z
+                             0.20, 0.20, 0.11,   // end   x, y, z
                              16.65, 73, 180.94788);           // density, Z, A
         
         // water phantom
         Experiment.AddCuboid(-0.20, -0.20, 0.21,            // start x, y, z
-                             0.20, 0.20, 0.31,   // end   x, y, z
-                             1, 74, 18.015);           // density, Z, A
+                             0.20, 0.20, 0.51,   // end   x, y, z
+                             1, 7.42, 18.015);           // density, Z, A
         
         // two 1mm-thin "silicon detectors" 10cm and 20cm after the iron block
-        Experiment.AddCuboid(-0.5, -0.5, 0.209, // start x, y, z
-                             0.5, 0.5, 0.21,   // end   x, y, z
+        Experiment.AddCuboid(-0.5, -0.5, 0.515, // start x, y, z
+                             0.5, 0.5, 0.52,   // end   x, y, z
                              2.33, 14, 28.085);                 // density, Z, A
         
-        Experiment.AddCuboid(-0.5, -0.5, 0.31, // start x, y, z
-                             0.45, 0.45, 0.311,   // end   x, y, z
+        Experiment.AddCuboid(-0.5, -0.5, 0.53, // start x, y, z
+                             0.45, 0.45, 0.54,   // end   x, y, z
                              2.33, 14, 28.085);                 // density, Z, A
         
         Experiment.Print();
@@ -285,31 +289,33 @@ class ProtonTherapy
         // with a total momentum startMomentum and theta=startAngle
         // we follow the particle physics "convention"
         // to have the z-axis in the (approximate) direction of the beam
-
         // this just sets up the array (for a case where one event has more than one particle)
         Particle [] Particles_gen = new Particle[1];
-
-        // create particle and set properties
-        Particles_gen[0] = new Particle();
         
         // converting input kinetic energy to momentum
-        double startMomentum = Math.sqrt(-startKineticEnergy*startKineticEnergy+938*938);
+        double startMomentum = Math.sqrt((938+startKineticEnergy)*(938+startKineticEnergy)-(938*938));
         System.out.println(startMomentum);
         
-        // initial momentum px,py,pz (MeV)
-        double phi = 0;
-        Particles_gen[0].px = startMomentum*Math.sin(startAngle)*Math.cos(phi);
-        Particles_gen[0].py = startMomentum*Math.sin(startAngle)*Math.sin(phi);
-        Particles_gen[0].pz = startMomentum*Math.cos(startAngle);
+        //  Loop to generate desired amount of particles
+        for(int i=0;i<numberOfParticles;i++){
+            // create particle and set properties
+            Particles_gen[i] = new Particle();
 
-        // Set charge and mass of a positive proton
-        Particles_gen[0].m = 938;
-        Particles_gen[0].Q = +1;
+            // initial momentum px,py,pz (MeV)
+            double phi = 0;
+            Particles_gen[i].px = startMomentum*Math.sin(startAngle)*Math.cos(phi);
+            Particles_gen[i].py = startMomentum*Math.sin(startAngle)*Math.sin(phi);
+            Particles_gen[i].pz = startMomentum*Math.cos(startAngle);
 
-        // initial position (x,y,z) = (0,0,0)
-        Particles_gen[0].x = 0.;
-        Particles_gen[0].y = 0.;
-        Particles_gen[0].z = 0.;
+            // Set charge and mass of a positive proton
+            Particles_gen[i].m = 938;
+            Particles_gen[i].Q = +1;
+
+            // initial position (x,y,z) = (0,0,0)
+            Particles_gen[i].x = 0.;
+            Particles_gen[i].y = 0.;
+            Particles_gen[i].z = 0.;
+        }
 
         return Particles_gen;
     }
