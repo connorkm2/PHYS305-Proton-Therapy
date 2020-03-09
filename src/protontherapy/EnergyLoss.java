@@ -23,7 +23,7 @@ class EnergyLoss
         
         K = 0.307075; // MeV m^2
         
-        // For a muon
+        // For a proton
         z = 1; //incident particle charge
         M = 938; // MeV
     }
