@@ -255,7 +255,9 @@ class ProtonTherapy
         
         // this line defines the size of the experiment in vacuum
         Experiment.AddCuboid(-0.5, -0.5, 0.,                // start x, y, z
+
                              0.5, 0.5, 0.84,  // end   x, y, z
+
                              0., 0., 0.);                     // zeros for "vacuum"
 
         // Block of tantalum of thickness 1cm
