@@ -14,7 +14,7 @@ class Voxel
     private String histname;
 
     // double array to store the actual histogram data
-    private double[] sumWeights;
+    private double[] sumBinEnergy;
 
     private long underflow, overflow;
     private long nfilled;
@@ -35,11 +35,11 @@ class Voxel
         
         // variables 
         binwidth = (binhigh_z - binlow_z) / (double) nbins;
-        sumWeights = new double[nbins];
+        sumBinEnergy = new double[nbins];
         underflow = 0;
         overflow = 0;
         nfilled = 0;
-        
+                
         // calculate and save the z coordinate of the centre of each bin
         binCentre = new double[nbins];
         for (int i = 0; i < nbins; i++) {
@@ -78,33 +78,37 @@ class Voxel
             overflow++;
         // filling bins 
         } else {
-            // add weight to the correct bin
-           
-            int ibin = (int) ( (z_ - binlow_z)/binwidth);
-            sumWeights[ibin] = sumWeights[ibin] + 1.0;
+            
+            int ibin = (int) ((p.z - binlow_z)/binwidth);
+            System.out.println("Cheetah");
+            System.out.println(p.z);
+            System.out.println(binlow_z);
+            System.out.println(binwidth);
+            sumBinEnergy[ibin] = sumBinEnergy[ibin] + z_energy;
+            //sumWeights[ibin] = sumWeights[ibin] + 1.0;
         }
         // increases filled bin count by one
         nfilled++;
     }
 
     // 
-    public double getContent(int nbin)
+    public double getBinEnergy(int nbin)
     {
         // returns the contents on bin 'nbin' to the user
-        return sumWeights[nbin];
+        return sumBinEnergy[nbin];
     }
 
     public double getError(int nbin)
     {
         // returns the error on bin 'nbin' to the user
-        return Math.sqrt(sumWeights[nbin]);
+        return Math.sqrt(sumBinEnergy[nbin]);
     }
     
     //-------------------------------------
     public void print()
     {
         for (int bin = 0; bin < getNbins(); bin++) {
-            System.out.println("Bin " + bin + " = " +getContent(bin)
+            System.out.println("Bin " + bin + " = " +getBinEnergy(bin)
                                + " +- " + getError(bin));
         }
         System.out.println("The number of fills = " + getNfilled());
@@ -129,7 +133,7 @@ class Voxel
         // Write the file as a comma seperated file (.csv) so it can be read it into EXCEL
         // first some general information about the histogram
         outputFile.println("histname, " + histname);
-        outputFile.println("binlow, " + binlow);
+        outputFile.println("binlow, " + binlow_z);
         outputFile.println("binwidth, " + binwidth);
         outputFile.println("nbins, " + nbins);
         outputFile.println("underflow, " + underflow);
@@ -139,7 +143,7 @@ class Voxel
         // together with the x-coordinate of the centre of each bin.
         for (int n = 0; n < nbins; n++) {
             // comma separated values
-            outputFile.println(n + "," + binCentre[n] + "," + getContent(n) + "," + getError(n));
+            outputFile.println(n + "," + binCentre[n] + "," + getBinEnergy(n) + "," + getError(n));
         }
         outputFile.close(); // close the output file
     }
