@@ -44,8 +44,8 @@ class ProtonTherapy
 
     // parameters used for the ParticleTracker
     // total time to track (seconds), number of time steps, use/don't use RK4
-    static final double time = 1E-8;
-    static final int nsteps = 1000;
+    static final double time = 1E-7;
+    static final int nsteps = 100000;
     static final boolean useRungeKutta4 = false;
 
     // minimum size of experimental features,
@@ -255,7 +255,7 @@ class ProtonTherapy
         
         // this line defines the size of the experiment in vacuum
         Experiment.AddCuboid(-0.5, -0.5, 0.,                // start x, y, z
-                             0.5, 0.5, 0.311,  // end   x, y, z
+                             0.5, 0.5, 0.54,  // end   x, y, z
                              0., 0., 0.);                     // zeros for "vacuum"
 
         // Block of tantalum of thickness 1cm
