@@ -2,65 +2,145 @@ package protontherapy;
 
 import java.io.*;
 
-// class to create voxels
+/// this import is needed for the file input/output functionality
+import java.io.*;
+
 class Voxel
-{    
-    // defining variables
-    int nvoxel = 0;
-    int i = 0;
-    
-    // tumour dimensions - hard-coded in atm, need to relate to proton therapy class
-    double x_tumour = 0.4; //m
-    double y_tumour = 0.4; //m
-    double z_tumour = 0.3; //m
-    
-    // total number of voxels desired
-    int total_voxel = 10;
-    
-    // calculating voxel dimensions
-    double voxel_x = x_tumour/total_voxel;        
-    double voxel_y = y_tumour/total_voxel;
-    double voxel_z = z_tumour/total_voxel;
-            
-    // initializes empty arrays for x,y,z coords
-    double [] x_coords = new double[total_voxel];
-    double [] y_coords = new double[total_voxel];
-    double [] z_coords = new double[total_voxel];
+{       
+    private double binlow_z, binhigh_z;
+    private double binwidth;
+    private int nbins;
+    private double[] binCentre;
+    private String histname;
 
-    // x array - *** what is going wrong here?
-    for (int i = 0; i <= total_voxel ; i++) {
-        x_coords[i] = i*voxel_x;
-    }
-    
-    // y array
-    for (int i = 0; i <= total_voxel ; i++) {
-        y_coords[i] = i*voxel_y;
-    }
-    
-    // z array
-    for (int i = 0; i <= total_voxel ; i++) {
-        z_coords[i] = i*voxel_z;           
-    } 
-   /*
-    public [] AddVoxel(double x_coords[i], double y_coords[i], double z_coords[i],
-                         double x_coords[i+1], double y_coords[i+1], double z_coords[i+1]);
+    // double array to store the actual histogram data
+    private double[] sumWeights;
+
+    private long underflow, overflow;
+    private long nfilled;
+
+    // constructor for the class Histogram
+    public Voxel(int numberOfBins, double start, double end, String name)
     {
-        if (nvoxel >= total_voxel) {
-            return -1;
-        }
+        // store the parameters and setup the histogram
+        // note that parameters need to have different names than class variables
+        nbins = numberOfBins;
         
-        type[nvoxel] = 1;
-        shapes[nshapes] = new double[6];
-        shapes[nshapes][0] = x0;
-        shapes[nshapes][1] = y0;
-        shapes[nshapes][2] = z0;
-        shapes[nshapes][3] = x1;
-        shapes[nshapes][4] = y1;
-        shapes[nshapes][5] = z1;
+        // need bins in 3 dimensions
+        binlow_z = start; // beginning voxel coordinate
+        binhigh_z = end; // end voxel coordinate
+        
+        
+        histname = name;
+        
+        // variables 
+        binwidth = (binhigh_z - binlow_z) / (double) nbins;
+        sumWeights = new double[nbins];
+        underflow = 0;
+        overflow = 0;
+        nfilled = 0;
+        
+        // calculate and save the z coordinate of the centre of each bin
+        binCentre = new double[nbins];
+        for (int i = 0; i < nbins; i++) {
+            binCentre[i] = binlow_z + (i+0.5)*binwidth;
+        }
+    }
+    // returns number of bins
+    public int getNbins()
+    {
+        return nbins;
+    }
+    // returns underflow variable
+    public long getUnderflow()
+    {
+        return underflow;
+    }
+    // returns overflow variable
+    public long getOverflow()
+    {
+        return overflow;
+    }
+    // returns number variable
+    public long getNfilled()
+    {
+        return nfilled;
+    }
+    
+    // fills voxels with energy
+    public void fill_z(double z_energy, Particle p) 
+    {
+        // increases underflow count
+        if (z_energy < binlow_z) {
+            underflow++;
+        // increases overflow
+        } else if (z_energy >= binhigh_z) {
+            overflow++;
+        // filling bins 
+        } else {
+            // add weight to the correct bin
+           
+            int ibin = (int) ( (z_ - binlow_z)/binwidth);
+            sumWeights[ibin] = sumWeights[ibin] + 1.0;
+        }
+        // increases filled bin count by one
+        nfilled++;
+    }
 
-      
+    // 
+    public double getContent(int nbin)
+    {
+        // returns the contents on bin 'nbin' to the user
+        return sumWeights[nbin];
+    }
 
-        nshapes++;
-        return (nshapes-1);
-    }*/
+    public double getError(int nbin)
+    {
+        // returns the error on bin 'nbin' to the user
+        return Math.sqrt(sumWeights[nbin]);
+    }
+    
+    //-------------------------------------
+    public void print()
+    {
+        for (int bin = 0; bin < getNbins(); bin++) {
+            System.out.println("Bin " + bin + " = " +getContent(bin)
+                               + " +- " + getError(bin));
+        }
+        System.out.println("The number of fills = " + getNfilled());
+        System.out.println("Underflow = " + getUnderflow()
+                           + ", Overflow = " + getOverflow());
+    }
+    
+    //-------------------------------------
+    public void writeToDisk(String filename)
+    {
+        // this sends the output to a file with name "filename"
+        // the block with try { ... } catch (IOException e) { ... } is needed to handle the case,
+        // where opening the file fails, e.g. disk is full or similar
+        PrintWriter outputFile;
+        try {
+            outputFile = new PrintWriter(filename);
+        } catch (IOException e) {
+            System.err.println("Failed to open file " + filename + ". Histogram data was not saved.");
+            return;
+        }
+
+        // Write the file as a comma seperated file (.csv) so it can be read it into EXCEL
+        // first some general information about the histogram
+        outputFile.println("histname, " + histname);
+        outputFile.println("binlow, " + binlow);
+        outputFile.println("binwidth, " + binwidth);
+        outputFile.println("nbins, " + nbins);
+        outputFile.println("underflow, " + underflow);
+        outputFile.println("overflow, " + overflow);
+
+        // now make a loop to write the contents of each bin to disk, one number at a time
+        // together with the x-coordinate of the centre of each bin.
+        for (int n = 0; n < nbins; n++) {
+            // comma separated values
+            outputFile.println(n + "," + binCentre[n] + "," + getContent(n) + "," + getError(n));
+        }
+        outputFile.close(); // close the output file
+    }
 }
