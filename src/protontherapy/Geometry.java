@@ -38,6 +38,8 @@ class Geometry
     
     private EnergyLoss [] Eloss;
     private MCS [] MultScatter;
+    
+    private Voxel z_hist;
 
     private double minfeaturesize;
     
@@ -59,6 +61,8 @@ class Geometry
         MultScatter = new MCS[maxShapes];
 
         minfeaturesize = featuresize;
+        
+        z_hist = new Voxel(100, 0.1, 0.4, "Z Slices");
     }
 
     public int getNshapes() { return nshapes; }
@@ -165,37 +169,18 @@ class Geometry
         if (volume >= 1) {
             double lostE = Eloss[volume].getEnergyLoss(p)*dist;
             p.reduceEnergy(lostE);
-            gainEnergy(p, lostE);
+            if(isInVolume(p, 2)){
+//                System.out.println("Dog");
+//                System.out.println(lostE);
+//                System.out.println(p.z);
+                 z_hist.fill_z(lostE, p);
+
+            }
         }
     }
-    
-    public void gainEnergy(Particle p, double E){
-        int id = getVolume(p);
-        if(isInVolume(p, id)){
-            gainedE[lastpos] = E;
-            z[lastpos] = (float)p.z;
-            //System.out.println(z[lastpos]);
-            //System.out.println(lastpos);
-            lastpos++;
-        }
-    }
-    
-    public void writeEnergyGained(String filename){
-        PrintWriter outputFile;
-        try {
-            outputFile = new PrintWriter(filename);
-        } catch (IOException e) {
-            System.err.println("Failed to open file " + filename + ". Track data was not saved.");
-            return;
-        }
-        
-                // now make a loop to write the contents of the arrays to disk, one number at a time
-        outputFile.println("z[m], E [MeV]");
-        for (int n = 0; n < lastpos; n++) {
-            // comma separated values
-            outputFile.println(z[n] + "," + gainedE[n]);
-        }
-        outputFile.close(); // close the output file
+ 
+    public void writeEnergyHist(){
+        z_hist.writeToDisk("z_energy_hist3.csv");
     }
     
     public void doMultScatter(Particle p, double dist)

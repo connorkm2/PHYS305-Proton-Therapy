@@ -77,9 +77,9 @@ public class ParticleTracker
 
             // !large debug output!
             // this should be commented in "production runs"
-             System.out.println("After step " + n);
-             output.print();
-             System.out.println("In volume " + lastVolume);
+//             System.out.println("After step " + n);
+//             output.print();
+//             System.out.println("In volume " + lastVolume);
             // end of debug output
 
             if (!Experiment.isInVolume(output, 0)) {

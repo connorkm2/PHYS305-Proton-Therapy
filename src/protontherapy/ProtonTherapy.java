@@ -61,7 +61,7 @@ class ProtonTherapy
     static final int numberOfEvents = 1;    // Keep as 1 
     
     // Number of particles to generate 
-    static final int numberOfParticles = 1;
+    static final int numberOfParticles = 10;
     
     static final double delta = 0.2; // for det hists
     static final double delta_A = 0.05; //For first 4 hists gen and sim theta
@@ -102,7 +102,7 @@ class ProtonTherapy
         for (int nev = 0; nev < numberOfEvents; nev++) {
 
             if (nev % 1000 == 0) {
-                System.out.println("Simulating event " + nev);
+                //System.out.println("Simulating event " + nev);
             }
 
             // get the particles of the event to simulate
@@ -115,8 +115,8 @@ class ProtonTherapy
 
             for (int ip = 0; ip < Particles_gen.length; ip++) {
                  //some output (need to disable before running large numbers of events!)
-                 System.out.println("Simulating particle " + ip + " of event " + nev);
-                 Particles_gen[ip].print();
+//                 System.out.println("Simulating particle " + ip + " of event " + nev);
+//                 Particles_gen[ip].print();
 
                 ParticleTracker tracker = new ParticleTracker(Particles_gen[ip], time, nsteps, useRungeKutta4);
 
@@ -132,9 +132,9 @@ class ProtonTherapy
                 // write scatter plot for event 0, particle 0 to disk into file "output_particle.csv"
                 if (nev == 0 && ip == 0) {
                     Tracks_sim[ip].writeToDisk("output_particle.csv");
-                    Experiment.writeEnergyGained("waterProps.csv");
                 }
             }
+            Experiment.writeEnergyHist();
             // end of simulated particle propagation
 
             // simulate detection of each particle in each element from the simulated tracks
@@ -255,7 +255,7 @@ class ProtonTherapy
         
         // this line defines the size of the experiment in vacuum
         Experiment.AddCuboid(-0.5, -0.5, 0.,                // start x, y, z
-                             0.5, 0.5, 0.54,  // end   x, y, z
+                             0.5, 0.5, 0.84,  // end   x, y, z
                              0., 0., 0.);                     // zeros for "vacuum"
 
         // Block of tantalum of thickness 1cm
@@ -265,16 +265,16 @@ class ProtonTherapy
         
         // water phantom
         Experiment.AddCuboid(-0.20, -0.20, 0.21,            // start x, y, z
-                             0.20, 0.20, 0.51,   // end   x, y, z
+                             0.20, 0.20, 0.71,   // end   x, y, z
                              1, 7.42, 18.015);           // density, Z, A
         
         // two 1mm-thin "silicon detectors" 10cm and 20cm after the iron block
-        Experiment.AddCuboid(-0.5, -0.5, 0.515, // start x, y, z
-                             0.5, 0.5, 0.52,   // end   x, y, z
+        Experiment.AddCuboid(-0.5, -0.5, 0.915, // start x, y, z
+                             0.5, 0.5, 0.92,   // end   x, y, z
                              2.33, 14, 28.085);                 // density, Z, A
         
-        Experiment.AddCuboid(-0.5, -0.5, 0.53, // start x, y, z
-                             0.45, 0.45, 0.54,   // end   x, y, z
+        Experiment.AddCuboid(-0.5, -0.5, 0.93, // start x, y, z
+                             0.45, 0.45, 0.94,   // end   x, y, z
                              2.33, 14, 28.085);                 // density, Z, A
         
         Experiment.Print();
@@ -290,11 +290,11 @@ class ProtonTherapy
         // we follow the particle physics "convention"
         // to have the z-axis in the (approximate) direction of the beam
         // this just sets up the array (for a case where one event has more than one particle)
-        Particle [] Particles_gen = new Particle[1];
+        Particle [] Particles_gen = new Particle[numberOfParticles];
         
         // converting input kinetic energy to momentum
         double startMomentum = Math.sqrt((938+startKineticEnergy)*(938+startKineticEnergy)-(938*938));
-        System.out.println(startMomentum);
+//        System.out.println(startMomentum);
         
         //  Loop to generate desired amount of particles
         for(int i=0;i<numberOfParticles;i++){
