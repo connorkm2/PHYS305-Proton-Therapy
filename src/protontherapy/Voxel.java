@@ -71,19 +71,19 @@ class Voxel
     public void fill_z(double z_energy, Particle p) 
     {
         // increases underflow count
-        if (z_energy < binlow_z) {
+        if (p.z < binlow_z) {
             underflow++;
         // increases overflow
-        } else if (z_energy >= binhigh_z) {
+        } else if (p.z >= binhigh_z) {
             overflow++;
         // filling bins 
         } else {
             
             int ibin = (int) ((p.z - binlow_z)/binwidth);
-            System.out.println("Cheetah");
-            System.out.println(p.z);
-            System.out.println(binlow_z);
-            System.out.println(binwidth);
+//            System.out.println("Cheetah");
+//            System.out.println(p.z);
+//            System.out.println(binlow_z);
+//            System.out.println(binwidth);
             sumBinEnergy[ibin] = sumBinEnergy[ibin] + z_energy;
             //sumWeights[ibin] = sumWeights[ibin] + 1.0;
         }
@@ -146,5 +146,6 @@ class Voxel
             outputFile.println(n + "," + binCentre[n] + "," + getBinEnergy(n) + "," + getError(n));
         }
         outputFile.close(); // close the output file
+        System.out.println("File written!");
     }
 }

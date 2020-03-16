@@ -58,10 +58,11 @@ class ProtonTherapy
     static final double startAngle = 0;      // Radians
     
     // Number of events to simulate
-    static final int numberOfEvents = 1;    // Keep as 1 
+    static final int numberOfEvents = 4;    // Keep as 1 
+    static final int [] energies = {100, 125, 150, 200, 250};
     
     // Number of particles to generate 
-    static final int numberOfParticles = 10;
+    static final int numberOfParticles = 100;
     
     static final double delta = 0.2; // for det hists
     static final double delta_A = 0.05; //For first 4 hists gen and sim theta
@@ -104,9 +105,11 @@ class ProtonTherapy
             if (nev % 1000 == 0) {
                 //System.out.println("Simulating event " + nev);
             }
+            
+            System.out.println(energies[nev]);
 
             // get the particles of the event to simulate
-            Particle [] Particles_gen = GetParticles();
+            Particle [] Particles_gen = GetParticles(energies[nev]);
 
             // simulate propagation of each generated particle,
             // store output in Particles_sim and Tracks_sim
@@ -244,6 +247,8 @@ class ProtonTherapy
         hist_det_theta_zy2_smear.writeToDisk("Cdet_theta_zy2_smear.csv");
         hist_det_theta_zx3_smear.writeToDisk("Cdet_theta_zx3_smear.csv");
         hist_det_theta_zy3_smear.writeToDisk("Cdet_theta_zy3_smear.csv");
+        
+        Experiment.writeEnergyHist();
 
     }
 
@@ -285,7 +290,7 @@ class ProtonTherapy
     }
 
     
-    public static Particle[] GetParticles()
+    public static Particle[] GetParticles(double value)
     {
         // example to simulate just one proton starting at (0,0,0)
         // with a total momentum startMomentum and theta=startAngle
@@ -295,7 +300,7 @@ class ProtonTherapy
         Particle [] Particles_gen = new Particle[numberOfParticles];
         
         // converting input kinetic energy to momentum
-        double startMomentum = Math.sqrt((938+startKineticEnergy)*(938+startKineticEnergy)-(938*938));
+        double startMomentum = Math.sqrt((938+value)*(938+value)-(938*938));
 //        System.out.println(startMomentum);
         
         //  Loop to generate desired amount of particles
@@ -311,7 +316,7 @@ class ProtonTherapy
 
             // Set charge and mass of a positive proton
             Particles_gen[i].m = 938;
-            Particles_gen[i].Q = +1;
+            Particles_gen[i].Q = +1;  
 
             // initial position (x,y,z) = (0,0,0)
             Particles_gen[i].x = 0.;

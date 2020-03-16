@@ -33,8 +33,6 @@ class Geometry
     private double [] A;
 
     private double [][] shapes;
-    double [] gainedE;
-    float [] z;
     
     private EnergyLoss [] Eloss;
     private MCS [] MultScatter;
@@ -54,15 +52,13 @@ class Geometry
         Z = new double[maxShapes];
         A = new double[maxShapes];
         shapes = new double[maxShapes][];
-        gainedE = new double[100000];
-        z = new float[100000];
         
         Eloss = new EnergyLoss[maxShapes];
         MultScatter = new MCS[maxShapes];
 
         minfeaturesize = featuresize;
         
-        z_hist = new Voxel(100, 0.1, 0.4, "Z Slices");
+        z_hist = new Voxel(100, 0.2, 0.35, "Z Slices");
     }
 
     public int getNshapes() { return nshapes; }

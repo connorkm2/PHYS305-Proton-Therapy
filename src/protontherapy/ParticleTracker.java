@@ -69,7 +69,7 @@ public class ParticleTracker
             // Abort if particle stopped moving
             //System.out.println(output.momentum());
             if (output.momentum() <= 0.) {
-                System.out.println("Particle out of energy, done.");
+                //System.out.println("Particle out of energy, done.");
                 break;
             }
 
