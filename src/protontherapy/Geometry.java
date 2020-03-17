@@ -58,7 +58,9 @@ class Geometry
 
         minfeaturesize = featuresize;
         
-        z_hist = new Voxel(100, 0.2, 0.35, "Z Slices");
+        // Got to fix this error
+        
+        z_hist = new Voxel(400, [0.2, 0., 0.], [0.71, 0., 0.], "Z Slices");
     }
 
     public int getNshapes() { return nshapes; }
@@ -169,7 +171,7 @@ class Geometry
 //                System.out.println("Dog");
 //                System.out.println(lostE);
 //                System.out.println(p.z);
-                 z_hist.fill_z(lostE, p);
+                 z_hist.fill(lostE, p);
 
             }
         }

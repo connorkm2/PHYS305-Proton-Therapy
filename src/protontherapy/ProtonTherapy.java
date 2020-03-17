@@ -58,11 +58,13 @@ class ProtonTherapy
     static final double startAngle = 0;      // Radians
     
     // Number of events to simulate
-    static final int numberOfEvents = 4;    // Keep as 1 
-    static final int [] energies = {100, 125, 150, 200, 250};
+    static final int numberOfEvents = 1;    // Keep as 1 
+    
+    // Energy ranges for when we add multiple energy ranges to flatten dose area
+    static final int [] energies = {250, 250};
     
     // Number of particles to generate 
-    static final int numberOfParticles = 100;
+    static final int numberOfParticles = 1000;
     
     static final double delta = 0.2; // for det hists
     static final double delta_A = 0.05; //For first 4 hists gen and sim theta
@@ -137,7 +139,6 @@ class ProtonTherapy
                     Tracks_sim[ip].writeToDisk("output_particle.csv");
                 }
             }
-            Experiment.writeEnergyHist();
             // end of simulated particle propagation
 
             // simulate detection of each particle in each element from the simulated tracks
@@ -266,8 +267,8 @@ class ProtonTherapy
                              0., 0., 0.);                     // zeros for "vacuum"
 
         // Block of tantalum of thickness 1cm
-        Experiment.AddCuboid(-0.20, -0.20, 0.1,            // start x, y, z
-                             0.20, 0.20, 0.11,   // end   x, y, z
+        Experiment.AddCuboid(-0.20, -0.20, 0.2,            // start x, y, z
+                             0.20, 0.20, 0.21,   // end   x, y, z
                              16.65, 73, 180.94788);           // density, Z, A
         
         // water phantom
@@ -317,11 +318,13 @@ class ProtonTherapy
             // Set charge and mass of a positive proton
             Particles_gen[i].m = 938;
             Particles_gen[i].Q = +1;  
-
+            
+            double randomValue = 0.2 * randGen.nextDouble();
+            
             // initial position (x,y,z) = (0,0,0)
             Particles_gen[i].x = 0.;
             Particles_gen[i].y = 0.;
-            Particles_gen[i].z = 0.;
+            Particles_gen[i].z = randomValue;
         }
 
         return Particles_gen;
