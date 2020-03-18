@@ -64,7 +64,7 @@ class ProtonTherapy
     static final int [] energies = {250, 250};
     
     // Number of particles to generate 
-    static final int numberOfParticles = 1000;
+    static final int numberOfParticles = 100;
     
     static final double delta = 0.2; // for det hists
     static final double delta_A = 0.05; //For first 4 hists gen and sim theta

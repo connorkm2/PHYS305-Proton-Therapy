@@ -60,7 +60,10 @@ class Geometry
         
         // Got to fix this error
         
-        z_hist = new Voxel(400, [0.2, 0., 0.], [0.71, 0., 0.], "Z Slices");
+        double [] binlow = {0.2, 0, 0};
+        double [] binhigh = {0.71, 1, 1};
+        
+        z_hist = new Voxel(400, binlow, binhigh, "Z Slices");
     }
 
     public int getNshapes() { return nshapes; }
@@ -178,7 +181,7 @@ class Geometry
     }
  
     public void writeEnergyHist(){
-        z_hist.writeToDisk("z_energy_hist3.csv");
+        z_hist.writeToDisk("energy_hist3.csv");
     }
     
     public void doMultScatter(Particle p, double dist)
