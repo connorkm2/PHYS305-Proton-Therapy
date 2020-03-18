@@ -319,12 +319,12 @@ class ProtonTherapy
             Particles_gen[i].m = 938;
             Particles_gen[i].Q = +1;  
             
-            double randomValue = 0.2 * randGen.nextDouble();
+            double randValue = 0.2 * randGen.nextDouble();
             
             // initial position (x,y,z) = (0,0,0)
-            Particles_gen[i].x = 0.;
-            Particles_gen[i].y = 0.;
-            Particles_gen[i].z = randomValue;
+            Particles_gen[i].x = 0;
+            Particles_gen[i].y = 0;
+            Particles_gen[i].z = randValue;
         }
 
         return Particles_gen;
