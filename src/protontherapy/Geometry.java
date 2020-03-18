@@ -181,7 +181,7 @@ class Geometry
     }
  
     public void writeEnergyHist(){
-        z_hist.writeToDisk("energy_hist3.csv");
+        z_hist.writeToDisk("energy_hist.csv");
     }
     
     public void doMultScatter(Particle p, double dist)

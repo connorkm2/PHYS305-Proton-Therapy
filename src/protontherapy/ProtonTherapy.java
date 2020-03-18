@@ -54,17 +54,14 @@ class ProtonTherapy
 
     // start values
     //static final double startMomentum = 150.; // MeV
-    static final double startKineticEnergy = 150.; // MeV
+    static final double startKineticEnergy = 245.; // MeV
     static final double startAngle = 0;      // Radians
     
-    // Number of events to simulate
-    static final int numberOfEvents = 1;    // Keep as 1 
+    // Number of events to simulate (ie. the number of particles)
+    static final int numberOfEvents = 10000;
     
     // Energy ranges for when we add multiple energy ranges to flatten dose area
     static final int [] energies = {250, 250};
-    
-    // Number of particles to generate 
-    static final int numberOfParticles = 100;
     
     static final double delta = 0.2; // for det hists
     static final double delta_A = 0.05; //For first 4 hists gen and sim theta
@@ -107,11 +104,9 @@ class ProtonTherapy
             if (nev % 1000 == 0) {
                 //System.out.println("Simulating event " + nev);
             }
-            
-            System.out.println(energies[nev]);
 
             // get the particles of the event to simulate
-            Particle [] Particles_gen = GetParticles(energies[nev]);
+            Particle [] Particles_gen = GetParticles();
 
             // simulate propagation of each generated particle,
             // store output in Particles_sim and Tracks_sim
@@ -291,41 +286,39 @@ class ProtonTherapy
     }
 
     
-    public static Particle[] GetParticles(double value)
+    public static Particle[] GetParticles()
     {
+        //System.out.println("p");
         // example to simulate just one proton starting at (0,0,0)
         // with a total momentum startMomentum and theta=startAngle
         // we follow the particle physics "convention"
         // to have the z-axis in the (approximate) direction of the beam
         // this just sets up the array (for a case where one event has more than one particle)
-        Particle [] Particles_gen = new Particle[numberOfParticles];
+        Particle [] Particles_gen = new Particle[1];
         
         // converting input kinetic energy to momentum
-        double startMomentum = Math.sqrt((938+value)*(938+value)-(938*938));
+        double startMomentum = Math.sqrt((938+startKineticEnergy)*(938+startKineticEnergy)-(938*938));
 //        System.out.println(startMomentum);
         
-        //  Loop to generate desired amount of particles
-        for(int i=0;i<numberOfParticles;i++){
-            // create particle and set properties
-            Particles_gen[i] = new Particle();
+        // create particle and set properties
+        Particles_gen[0] = new Particle();
 
-            // initial momentum px,py,pz (MeV)
-            double phi = 0;
-            Particles_gen[i].px = startMomentum*Math.sin(startAngle)*Math.cos(phi);
-            Particles_gen[i].py = startMomentum*Math.sin(startAngle)*Math.sin(phi);
-            Particles_gen[i].pz = startMomentum*Math.cos(startAngle);
+        // initial momentum px,py,pz (MeV)
+        double phi = 0;
+        Particles_gen[0].px = startMomentum*Math.sin(startAngle)*Math.cos(phi);
+        Particles_gen[0].py = startMomentum*Math.sin(startAngle)*Math.sin(phi);
+        Particles_gen[0].pz = startMomentum*Math.cos(startAngle);
 
-            // Set charge and mass of a positive proton
-            Particles_gen[i].m = 938;
-            Particles_gen[i].Q = +1;  
-            
-            double randValue = 0.2 * randGen.nextDouble();
-            
-            // initial position (x,y,z) = (0,0,0)
-            Particles_gen[i].x = 0;
-            Particles_gen[i].y = 0;
-            Particles_gen[i].z = randValue;
-        }
+        // Set charge and mass of a positive proton
+        Particles_gen[0].m = 938;
+        Particles_gen[0].Q = +1;  
+
+        double randValue = (-0.2)*(0.2+0.2) * randGen.nextDouble();
+
+        // initial position (x,y,z) = (0,0,0)
+        Particles_gen[0].x = 0;
+        Particles_gen[0].y = 0;
+        Particles_gen[0].z = randValue;
 
         return Particles_gen;
     }
