@@ -33,6 +33,10 @@ class Voxel
         
         histname = name;
         
+        //System.out.println(binwidth[0]);
+        
+        binwidth = new double[3];
+        
         // variables 
         for(int i = 0; i < binlow.length; i++){
             binwidth[i] = (binhigh[i] - binlow[i]) / (double) nbins;
