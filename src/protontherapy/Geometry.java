@@ -60,8 +60,8 @@ class Geometry
         
         // Got to fix this error
         
-        double [] binlow = {0.2, 0, 0};
-        double [] binhigh = {0.71, 1, 1};
+        double [] binlow = {-0.2, -0.2, 0.2};
+        double [] binhigh = {0.2, 0.2, 0.71};
         
         z_hist = new Voxel(400, binlow, binhigh, "Z Slices");
     }
