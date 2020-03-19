@@ -4,6 +4,7 @@ import java.io.*;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Random;
+import static protontherapy.ProtonTherapy.randGen;
 
 class Geometry
 {
@@ -37,7 +38,7 @@ class Geometry
     private EnergyLoss [] Eloss;
     private MCS [] MultScatter;
     
-    private Voxel z_hist;
+    private Voxel energy_hist;
 
     private double minfeaturesize;
     
@@ -63,7 +64,7 @@ class Geometry
         double [] binlow = {-0.2, -0.2, 0.2};
         double [] binhigh = {0.2, 0.2, 0.71};
         
-        z_hist = new Voxel(400, binlow, binhigh, "Z Slices");
+        energy_hist = new Voxel(400, binlow, binhigh, "Z Slices");
     }
 
     public int getNshapes() { return nshapes; }
@@ -174,14 +175,16 @@ class Geometry
 //                System.out.println("Dog");
 //                System.out.println(lostE);
 //                System.out.println(p.z);
-                 z_hist.fill(lostE, p);
+//                double stdev = 0.1;
+//                double smearing = randGen.nextGaussian()*stdev;
+                energy_hist.fill(lostE, p);
 
             }
         }
     }
  
-    public void writeEnergyHist(){
-        z_hist.writeToDisk("energy_hist.csv");
+    public void writeEnergyHist(String filename){
+        energy_hist.writeToDisk(filename);
     }
     
     public void doMultScatter(Particle p, double dist)

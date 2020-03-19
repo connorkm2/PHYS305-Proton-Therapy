@@ -61,7 +61,7 @@ class ProtonTherapy
     static final int numberOfEvents = 10000;
     
     // Energy ranges for when we add multiple energy ranges to flatten dose area
-    static final int [] energies = {250, 250};
+    static final double [] energies = getEnergies(230, 250);
     
     static final double delta = 0.2; // for det hists
     static final double delta_A = 0.05; //For first 4 hists gen and sim theta
@@ -98,128 +98,130 @@ class ProtonTherapy
         // Define the genotrical properties of the experiment in method SetupExperiment()
         Geometry Experiment = SetupExperiment();
                 
-        // start of main loop: run the simulation numberOfEvents times
-        for (int nev = 0; nev < numberOfEvents; nev++) {
+        for(int ke = 0; ke < energies.length; ke++){
+            // start of main loop: run the simulation numberOfEvents times
+            for (int nev = 0; nev < numberOfEvents; nev++) {
 
-            if (nev % 1000 == 0) {
-                //System.out.println("Simulating event " + nev);
-            }
-
-            // get the particles of the event to simulate
-            Particle [] Particles_gen = GetParticles();
-
-            // simulate propagation of each generated particle,
-            // store output in Particles_sim and Tracks_sim
-            Particle [] Particles_sim = new Particle[Particles_gen.length];
-            Track [] Tracks_sim = new Track[Particles_gen.length];
-
-            for (int ip = 0; ip < Particles_gen.length; ip++) {
-                 //some output (need to disable before running large numbers of events!)
-//                 System.out.println("Simulating particle " + ip + " of event " + nev);
-//                 Particles_gen[ip].print();
-
-                ParticleTracker tracker = new ParticleTracker(Particles_gen[ip], time, nsteps, useRungeKutta4);
-
-                Particles_sim[ip] = tracker.track(Experiment);
-
-                // System.out.println("Output particle");
-                // Particles_sim[ip].print();
-
-                // save the full simulated track for later analysis
-                Tracks_sim[ip] = tracker.getTrack();
-                
-
-                // write scatter plot for event 0, particle 0 to disk into file "output_particle.csv"
-                if (nev == 0 && ip == 0) {
-                    Tracks_sim[ip].writeToDisk("output_particle.csv");
+                if (nev % 1000 == 0) {
+                    //System.out.println("Simulating event " + nev);
                 }
+
+                // get the particles of the event to simulate
+                Particle [] Particles_gen = GetParticles(energies[ke]);
+
+                // simulate propagation of each generated particle,
+                // store output in Particles_sim and Tracks_sim
+                Particle [] Particles_sim = new Particle[Particles_gen.length];
+                Track [] Tracks_sim = new Track[Particles_gen.length];
+
+                for (int ip = 0; ip < Particles_gen.length; ip++) {
+                     //some output (need to disable before running large numbers of events!)
+    //                 System.out.println("Simulating particle " + ip + " of event " + nev);
+    //                 Particles_gen[ip].print();
+
+                    ParticleTracker tracker = new ParticleTracker(Particles_gen[ip], time, nsteps, useRungeKutta4);
+
+                    Particles_sim[ip] = tracker.track(Experiment);
+
+                    // System.out.println("Output particle");
+                    // Particles_sim[ip].print();
+
+                    // save the full simulated track for later analysis
+                    Tracks_sim[ip] = tracker.getTrack();
+
+
+                    // write scatter plot for event 0, particle 0 to disk into file "output_particle.csv"
+                    if (nev == 0 && ip == 0) {
+                        Tracks_sim[ip].writeToDisk("output_particle.csv");
+                    }
+                }
+                // end of simulated particle propagation
+
+                // simulate detection of each particle in each element from the simulated tracks
+                // this is just for dumping the simulation to the screen
+    //             for (int ip = 0; ip < Tracks_sim.length; ip++) {
+    //              double [][] detection_txyz = Experiment.detectParticles(Tracks_sim[ip]);
+    //
+    //                 for (int idet = 1; idet < Experiment.getNshapes(); idet++) {
+    //                     System.out.println("Particle " + ip + " detection in volume " + idet);
+    //                     System.out.println("(t,x,y,z) = (" + detection_txyz[idet][0] + ", "
+    //                                     + detection_txyz[idet][1] + ", "
+    //                                     + detection_txyz[idet][2] + ", "
+    //                                     + detection_txyz[idet][3] + ")");
+    //                 }
+    //             }
+
+                // at this stage the simulation is done and we analyse the output
+                // typically we don't want to store thousands of tracks,
+                // but rather calculate some interesting quantities and make histograms of the distributions
+
+                // the following analysis is specific to single-particle events with two "detectors"
+                // it would look different in more complex cases
+
+                // retrieve initial generated particle momentum and fill histogram
+                hist_gen_mom.fill(Particles_gen[0].momentum());
+                // retrieve simulated particle momentum at the end of the simulation and fill histogram
+                hist_sim_mom.fill(Particles_sim[0].momentum());
+
+                // calculate theta angles in the z-x and z-y planes
+                // theta ~ atan2(x, z)
+
+                // generated - this should be equal to given startAngle and zero
+                double gen_theta_zx = Math.atan2(Particles_gen[0].px, Particles_gen[0].pz);
+                hist_gen_theta_zx.fill(gen_theta_zx);
+                double gen_theta_zy = Math.atan2(Particles_gen[0].py, Particles_gen[0].pz);
+                hist_gen_theta_zy.fill(gen_theta_zy);
+
+                // same after simulation - muon will have scattered around a bit
+                double sim_theta_zx = Math.atan2(Particles_sim[0].px, Particles_sim[0].pz);
+                hist_sim_theta_zx.fill(sim_theta_zx);
+    //            System.out.println("cat");
+    //            //stem.out.println(Particles_sim[0].px);
+    //            System.out.println(Particles_sim[0].pz);
+                //Particles_sim[0].print();
+
+                double sim_theta_zy = Math.atan2(Particles_sim[0].py, Particles_sim[0].pz);
+                hist_sim_theta_zy.fill(sim_theta_zy);
+
+                // after detection: reconstruct the angle from the two detected positions!
+                // the detectors have volume number 2+3 (see printout)
+                double [][] detection_txyz = Experiment.detectParticles(Tracks_sim[0]);
+                double x_det2 = detection_txyz[2][1]; // x-coo in detector 2
+                double x_det3 = detection_txyz[3][1]; // x-coo in detector 3
+                double y_det2 = detection_txyz[2][2]; // y-coo in detector 2
+                double y_det3 = detection_txyz[3][2]; // y-coo in detector 3
+                double z_det2 = detection_txyz[2][3]; // z-coo in detector 2
+                double z_det3 = detection_txyz[3][3]; // z-coo in detector 3
+
+                // calculating the detector theta angles
+                double det_theta_zx2 = Math.atan2(x_det2, z_det2);
+                double det_theta_zy2 = Math.atan2(x_det2, y_det2);
+                double det_theta_zx3 = Math.atan2(x_det3, z_det3);
+                double det_theta_zy3 = Math.atan2(x_det3, y_det3);
+
+                // filling histograms
+                hist_det_theta_zx2.fill(det_theta_zx2);
+                hist_det_theta_zy2.fill(det_theta_zy2);
+                hist_det_theta_zx3.fill(det_theta_zx3);
+                hist_det_theta_zy3.fill(det_theta_zy3);
+
+                // smearing
+                double stdev = 0.005;
+                double smearing = randGen.nextGaussian()*stdev;
+
+                // smearing histograms
+                hist_det_theta_zx2_smear.fill(det_theta_zx2 + smearing);
+                hist_det_theta_zy2_smear.fill(det_theta_zy2 + smearing);
+                hist_det_theta_zx3_smear.fill(det_theta_zx3 + smearing);
+                hist_det_theta_zy3_smear.fill(det_theta_zy3 + smearing);
+
+                //System.out.println("antelope");
+                //System.out.println(smearing);
+
+                // end of analysis
+
+
             }
-            // end of simulated particle propagation
-
-            // simulate detection of each particle in each element from the simulated tracks
-            // this is just for dumping the simulation to the screen
-//             for (int ip = 0; ip < Tracks_sim.length; ip++) {
-//              double [][] detection_txyz = Experiment.detectParticles(Tracks_sim[ip]);
-//
-//                 for (int idet = 1; idet < Experiment.getNshapes(); idet++) {
-//                     System.out.println("Particle " + ip + " detection in volume " + idet);
-//                     System.out.println("(t,x,y,z) = (" + detection_txyz[idet][0] + ", "
-//                                     + detection_txyz[idet][1] + ", "
-//                                     + detection_txyz[idet][2] + ", "
-//                                     + detection_txyz[idet][3] + ")");
-//                 }
-//             }
-
-            // at this stage the simulation is done and we analyse the output
-            // typically we don't want to store thousands of tracks,
-            // but rather calculate some interesting quantities and make histograms of the distributions
-
-            // the following analysis is specific to single-particle events with two "detectors"
-            // it would look different in more complex cases
-
-            // retrieve initial generated particle momentum and fill histogram
-            hist_gen_mom.fill(Particles_gen[0].momentum());
-            // retrieve simulated particle momentum at the end of the simulation and fill histogram
-            hist_sim_mom.fill(Particles_sim[0].momentum());
-
-            // calculate theta angles in the z-x and z-y planes
-            // theta ~ atan2(x, z)
-
-            // generated - this should be equal to given startAngle and zero
-            double gen_theta_zx = Math.atan2(Particles_gen[0].px, Particles_gen[0].pz);
-            hist_gen_theta_zx.fill(gen_theta_zx);
-            double gen_theta_zy = Math.atan2(Particles_gen[0].py, Particles_gen[0].pz);
-            hist_gen_theta_zy.fill(gen_theta_zy);
-            
-            // same after simulation - muon will have scattered around a bit
-            double sim_theta_zx = Math.atan2(Particles_sim[0].px, Particles_sim[0].pz);
-            hist_sim_theta_zx.fill(sim_theta_zx);
-//            System.out.println("cat");
-//            //stem.out.println(Particles_sim[0].px);
-//            System.out.println(Particles_sim[0].pz);
-            //Particles_sim[0].print();
-
-            double sim_theta_zy = Math.atan2(Particles_sim[0].py, Particles_sim[0].pz);
-            hist_sim_theta_zy.fill(sim_theta_zy);
-
-            // after detection: reconstruct the angle from the two detected positions!
-            // the detectors have volume number 2+3 (see printout)
-            double [][] detection_txyz = Experiment.detectParticles(Tracks_sim[0]);
-            double x_det2 = detection_txyz[2][1]; // x-coo in detector 2
-            double x_det3 = detection_txyz[3][1]; // x-coo in detector 3
-            double y_det2 = detection_txyz[2][2]; // y-coo in detector 2
-            double y_det3 = detection_txyz[3][2]; // y-coo in detector 3
-            double z_det2 = detection_txyz[2][3]; // z-coo in detector 2
-            double z_det3 = detection_txyz[3][3]; // z-coo in detector 3
-            
-            // calculating the detector theta angles
-            double det_theta_zx2 = Math.atan2(x_det2, z_det2);
-            double det_theta_zy2 = Math.atan2(x_det2, y_det2);
-            double det_theta_zx3 = Math.atan2(x_det3, z_det3);
-            double det_theta_zy3 = Math.atan2(x_det3, y_det3);
-            
-            // filling histograms
-            hist_det_theta_zx2.fill(det_theta_zx2);
-            hist_det_theta_zy2.fill(det_theta_zy2);
-            hist_det_theta_zx3.fill(det_theta_zx3);
-            hist_det_theta_zy3.fill(det_theta_zy3);
-            
-            // smearing
-            double stdev = 0.005;
-            double smearing = randGen.nextGaussian()*stdev;
-            
-            // smearing histograms
-            hist_det_theta_zx2_smear.fill(det_theta_zx2 + smearing);
-            hist_det_theta_zy2_smear.fill(det_theta_zy2 + smearing);
-            hist_det_theta_zx3_smear.fill(det_theta_zx3 + smearing);
-            hist_det_theta_zy3_smear.fill(det_theta_zy3 + smearing);
-            
-            //System.out.println("antelope");
-            //System.out.println(smearing);
-
-            // end of analysis
-            
-
         }
         // end of main event loop
 
@@ -244,7 +246,7 @@ class ProtonTherapy
         hist_det_theta_zx3_smear.writeToDisk("Cdet_theta_zx3_smear.csv");
         hist_det_theta_zy3_smear.writeToDisk("Cdet_theta_zy3_smear.csv");
         
-        Experiment.writeEnergyHist();
+        Experiment.writeEnergyHist("energy_hist.csv");
 
     }
 
@@ -265,7 +267,7 @@ class ProtonTherapy
         Experiment.AddCuboid(-0.20, -0.20, 0.2,            // start x, y, z
                              0.20, 0.20, 0.21,   // end   x, y, z
                              16.65, 73, 180.94788);           // density, Z, A
-        
+                
         // water phantom
         Experiment.AddCuboid(-0.20, -0.20, 0.21,            // start x, y, z
                              0.20, 0.20, 0.71,   // end   x, y, z
@@ -286,7 +288,7 @@ class ProtonTherapy
     }
 
     
-    public static Particle[] GetParticles()
+    public static Particle[] GetParticles(double energy)
     {
         //System.out.println("p");
         // example to simulate just one proton starting at (0,0,0)
@@ -297,7 +299,7 @@ class ProtonTherapy
         Particle [] Particles_gen = new Particle[1];
         
         // converting input kinetic energy to momentum
-        double startMomentum = Math.sqrt((938+startKineticEnergy)*(938+startKineticEnergy)-(938*938));
+        double startMomentum = Math.sqrt((938+energy)*(938+energy)-(938*938));
 //        System.out.println(startMomentum);
         
         // create particle and set properties
@@ -321,5 +323,16 @@ class ProtonTherapy
         Particles_gen[0].z = randValue;
 
         return Particles_gen;
+    }
+    
+    public static double[] getEnergies(double start, double end){
+        int steps = (int) (end-start);
+        double [] values = new double[steps];
+        
+        for(int i = 0; i < steps; i++){
+            values[i] = start+i;
+        }
+        
+        return values;
     }
 }
