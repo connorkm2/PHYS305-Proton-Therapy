@@ -185,6 +185,7 @@ class Geometry
  
     public void writeEnergyHist(String filename){
         energy_hist.writeToDisk(filename);
+        energy_hist.writeSliceData("slice.csv");
     }
     
     public void doMultScatter(Particle p, double dist)
