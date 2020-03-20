@@ -184,7 +184,7 @@ class Voxel
                 outputFile.println(n + "," + binCentre[i][n] + "," + getBinEnergy(i, n) + "," + getError(i, n));
             }
             outputFile.close(); // close the output file
-            System.out.println("File written!");
+            System.out.println(plane[i]+"_"+filename+" written!");
         }
     }
 }
