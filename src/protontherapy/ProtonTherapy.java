@@ -1,5 +1,6 @@
 package protontherapy;
 
+import java.util.Arrays;
 import java.util.Random;
 
 class ProtonTherapy
@@ -58,10 +59,10 @@ class ProtonTherapy
     static final double startAngle = 0;      // Radians
     
     // Number of events to simulate (ie. the number of particles)
-    static final int numberOfEvents = 10000;
+    static int numberOfEvents = 10000;
     
     // Energy ranges for when we add multiple energy ranges to flatten dose area
-    static final double [] energies = getEnergies(230, 250);
+    static final double [][] energies = getEnergies(230, 250);
     
     static final double delta = 0.2; // for det hists
     static final double delta_A = 0.05; //For first 4 hists gen and sim theta
@@ -73,6 +74,7 @@ class ProtonTherapy
     
     public static void main (String [] args )
     {
+        //System.out.println(Arrays.deepToString(energies));
         // setup histograms for analysis
         Histogram hist_gen_mom = new Histogram(50, 0., 150*1.01, "initial generated Momentum");
         Histogram hist_sim_mom = new Histogram(50, 0., 150*1.01, "simulated final Momentum");
@@ -100,6 +102,10 @@ class ProtonTherapy
                 
         for(int ke = 0; ke < energies.length; ke++){
             // start of main loop: run the simulation numberOfEvents times
+            
+            // Added for weighting the subsequent beams
+            numberOfEvents = (int) Math.rint( numberOfEvents*energies[ke][1]);
+            
             for (int nev = 0; nev < numberOfEvents; nev++) {
 
                 if (nev % 1000 == 0) {
@@ -107,7 +113,7 @@ class ProtonTherapy
                 }
 
                 // get the particles of the event to simulate
-                Particle [] Particles_gen = GetParticles(energies[ke]);
+                Particle [] Particles_gen = GetParticles(energies[ke][0]);
 
                 // simulate propagation of each generated particle,
                 // store output in Particles_sim and Tracks_sim
@@ -325,12 +331,17 @@ class ProtonTherapy
         return Particles_gen;
     }
     
-    public static double[] getEnergies(double start, double end){
-        int steps = (int) (end-start);
-        double [] values = new double[steps];
+    public static double[][] getEnergies(double start, double end){
+        int steps = (int) (end-start) +1;
+        double [][] values = new double[steps][2];
+        double fraction = 1;
         
         for(int i = 0; i < steps; i++){
-            values[i] = start+i;
+            values[i][0] = end-i;
+            
+            // The fraction by which to reduce the nev
+            values[i][1] = fraction;
+            fraction = fraction - ((double)1/steps);
         }
         
         return values;
