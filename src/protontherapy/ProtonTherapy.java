@@ -256,7 +256,7 @@ class ProtonTherapy
         hist_det_theta_zx3_smear.writeToDisk("Cdet_theta_zx3_smear.csv");
         hist_det_theta_zy3_smear.writeToDisk("Cdet_theta_zy3_smear.csv");
         
-        Experiment.writeEnergyHist("energy_hist.csv");
+        Experiment.writeEnergyHist(271,"energy_hist.csv");
 
     }
 
