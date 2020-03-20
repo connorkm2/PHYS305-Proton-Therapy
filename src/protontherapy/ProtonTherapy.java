@@ -62,7 +62,7 @@ class ProtonTherapy
     static int numberOfEvents = 10000;
     
     // Energy ranges for when we add multiple energy ranges to flatten dose area
-    static final double [][] energies = getEnergies(230, 250);
+    static final double [][] energies = getEnergies(210, 250);
     
     static final double delta = 0.2; // for det hists
     static final double delta_A = 0.05; //For first 4 hists gen and sim theta
@@ -105,6 +105,10 @@ class ProtonTherapy
             
             // Added for weighting the subsequent beams
             numberOfEvents = (int) Math.rint( numberOfEvents*energies[ke][1]);
+           System.out.println(numberOfEvents);
+//            if(ke == 1){
+//                numberOfEvents = numberOfEvents/2;
+//            }
             
             for (int nev = 0; nev < numberOfEvents; nev++) {
 
@@ -341,7 +345,7 @@ class ProtonTherapy
             
             // The fraction by which to reduce the nev
             values[i][1] = fraction;
-            fraction = fraction - ((double)1/steps);
+            fraction = fraction - ((double)1/(10*steps));
         }
         
         return values;

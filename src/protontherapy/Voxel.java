@@ -137,6 +137,21 @@ class Voxel
         return Math.sqrt(sumBinEnergy[i][nbin]);
     }
     
+    public double [][] getVoxelEnergy(int zSlice){
+        double [][] output = new double[nbins][nbins];
+        double zSlice_Energy = getBinEnergy(2, zSlice);
+        
+        for(int i = 0; i < nbins; i++){
+            double xSlice_Energy = getBinEnergy(0,i);
+            for(int a = 0; a <nbins; a++){
+                double ySlice_Energy = getBinEnergy(1, a);
+                output[i][a] = zSlice_Energy-xSlice_Energy-ySlice_Energy;
+            }
+        }
+        
+        return output;
+    }
+    
     //-------------------------------------
     public void print()
     {
@@ -186,5 +201,26 @@ class Voxel
             outputFile.close(); // close the output file
             System.out.println(plane[i]+"_"+filename+" written!");
         }
+    }
+    
+    public void writeSliceData(String filename){
+        PrintWriter outputFile;
+        try {
+            outputFile = new PrintWriter(filename);
+        } catch (IOException e) {
+            System.err.println("Failed to open file "+filename + ". Histogram data was not saved.");
+            return;
+        }
+        
+        double [][] matrix = getVoxelEnergy(240);
+        
+        for(int i = 0; i < nbins; i++){
+            for(int a = 0; a < nbins; a++){
+                outputFile.print(matrix[i][a]+",");
+            }
+            outputFile.println();
+        }
+        outputFile.close(); // close the output file
+        System.out.println(filename+" written!");
     }
 }
