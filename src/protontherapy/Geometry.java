@@ -3,6 +3,7 @@ package protontherapy;
 import java.io.*;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.lang.Math;
 import java.util.Random;
 import static protontherapy.ProtonTherapy.randGen;
 
@@ -32,6 +33,9 @@ class Geometry
     private double [] rho;
     private double [] Z;
     private double [] A;
+    
+    private double sigma_x = 0.05;
+    private double sigma_y = 0.05;
 
     private double [][] shapes;
     
@@ -68,6 +72,14 @@ class Geometry
     }
 
     public int getNshapes() { return nshapes; }
+    
+    public double bivarGaussian(double x, double y) {
+        double zGauss = (1/(2*Math.PI*sigma_x*sigma_y))*Math.exp(-0.5*((Math.pow(x, 2)/Math.pow(sigma_x,2))+(Math.pow(y, 2)/Math.pow(sigma_y, 2))));
+        System.out.println("hamster");
+        System.out.println(zGauss);
+        return zGauss;
+    }
+   
 
     public int AddCuboid(double x0, double y0, double z0,
                          double x1, double y1, double z1,
@@ -134,6 +146,14 @@ class Geometry
                      && x <= shapes[id][3]
                      && y <= shapes[id][4]
                      && z <= shapes[id][5] );
+        }
+        
+        if (type[id] == 2) {
+            // coulomb scatter
+            return ( // base 
+                     shapes[id][2] <= z
+                    // bivariate Gaussian
+                     && z <= bivarGaussian(x, y));
         }
         
         return false;
