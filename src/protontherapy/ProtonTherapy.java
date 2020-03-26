@@ -74,7 +74,7 @@ class ProtonTherapy
     
     public static void main (String [] args )
     {
-        //System.out.println(Arrays.deepToString(energies));
+        System.out.println(Arrays.deepToString(getEnergiesNEW(250)));
         // setup histograms for analysis
         Histogram hist_gen_mom = new Histogram(50, 0., 150*1.01, "initial generated Momentum");
         Histogram hist_sim_mom = new Histogram(50, 0., 150*1.01, "simulated final Momentum");
@@ -310,5 +310,30 @@ class ProtonTherapy
         }
         
         return values;
+    }
+    
+//    This new function will determine the range of energies based on a fixed 
+//    distance between pristine peaks as described in the refernece material
+//    it uses the relationship (R ~ alpha*E^1.8) which is taken from literature.
+//    alpha is taken as 0.0022 and R is given in cm.
+//    The range in energy generated here is small and may need some testing,
+//    but it is based on the paramters from the book.
+    
+    public static double[][] getEnergiesNEW(double startE){
+        int numPeaks = 4;
+        
+        double initialRange = (0.0022*Math.pow(startE, 1.8));
+        double [][] energies = new double[numPeaks][2];
+        
+        energies[0][0] = startE;
+        for(int i = 1; i < numPeaks;i++){
+            double nextEnergy = Math.pow(((initialRange-(0.006*i))/0.0022),1/1.8);
+            energies[i][0] = nextEnergy;
+            
+            energies[i][1] = Math.exp(-.000001*nextEnergy);
+            System.out.println(energies[i][1]);
+        }
+        
+        return energies;
     }
 }

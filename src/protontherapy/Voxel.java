@@ -1,6 +1,8 @@
 package protontherapy;
 
 import java.io.*;
+import java.util.Arrays;
+
 
 /// this import is needed for the file input/output functionality
 import java.io.*;
@@ -221,6 +223,7 @@ class Voxel
     public void writeData(double depth, String filename){
         writeZSlice(depth);
         writeToDiskCombined(filename);
+        System.out.println(Arrays.toString(binwidth));
     }
 
 }
