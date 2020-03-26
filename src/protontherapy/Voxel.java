@@ -18,6 +18,9 @@ class Voxel
 
     private long [] underflow, overflow;
     private long [] nfilled;
+    
+    //3D array of Voxels for generating z slice matrices
+    private double[][][] zSlices;
 
     // constructor for the class Histogram
     public Voxel(int numberOfBins, double [] start, double [] end, String name)
@@ -45,6 +48,8 @@ class Voxel
         underflow = new long[3];
         overflow = new long[3];
         nfilled = new long[3];
+        
+        zSlices = new double[nbins][nbins][nbins];
                 
         // calculate and save the z coordinate of the centre of each bin
         binCentre = new double[3][nbins];
@@ -75,31 +80,8 @@ class Voxel
         return nfilled[i];
     }
     
-//    // fills voxels with energy
-//    public void fill_z(double energy, Particle p) 
-//    {
-//        // increases underflow count
-//        if (p.z < binlow_z) {
-//            underflow++;
-//        // increases overflow
-//        } else if (p.z >= binhigh_z) {
-//            overflow++;
-//        // filling bins 
-//        } else {
-//            
-//            int ibin = (int) ((p.z - binlow_z)/binwidth);
-////            System.out.println("Cheetah");
-////            System.out.println(p.z);
-////            System.out.println(binlow_z);
-////            System.out.println(binwidth);
-//            sumBinEnergy[ibin] = sumBinEnergy[ibin] + energy;
-//            //sumWeights[ibin] = sumWeights[ibin] + 1.0;
-//        }
-//        // increases filled bin count by one
-//        nfilled++;
-//    }
-    
     public void fill(double energy, Particle p){
+        fillzSlices(energy, p);
         double [] position = {p.x, p.y, p.z};
         for(int i = 0; i < binlow.length; i++){
             if (position[i] < binlow[i]) {
@@ -123,6 +105,19 @@ class Voxel
             }
         
     }
+    
+//    Will fill an array of slices of z with the sum of energy deposited 
+//    in those voxels. 
+//    Essentially uses the histogram bins to genertate a 3D matrix of values at 
+//    a coordinate of x,y,z
+    public void fillzSlices(double energy, Particle p){
+        int xBin = (int) ((p.x - binlow[0])/binwidth[0]);
+        int yBin = (int) ((p.y - binlow[1])/binwidth[1]);
+        int zBin = (int) ((p.z - binlow[2])/binwidth[2]);
+                
+        zSlices[zBin][xBin][yBin] = zSlices[zBin][xBin][yBin] + energy;
+        
+    }
 
     // 
     public double getBinEnergy(int i, int nbin)
@@ -130,35 +125,13 @@ class Voxel
         // returns the contents on bin 'nbin' to the user
         return sumBinEnergy[i][nbin];
     }
-
-    public double getError(int i, int nbin)
-    {
-        // returns the error on bin 'nbin' to the user
-        return Math.sqrt(sumBinEnergy[i][nbin]);
-    }
-    
-    public double [][] getVoxelEnergy(int zSlice){
-        double [][] output = new double[nbins][nbins];
-        double zSlice_Energy = getBinEnergy(2, zSlice);
         
-        for(int i = 0; i < nbins; i++){
-            double xSlice_Energy = getBinEnergy(0,i);
-            for(int a = 0; a <nbins; a++){
-                double ySlice_Energy = getBinEnergy(1, a);
-                output[i][a] = zSlice_Energy-xSlice_Energy-ySlice_Energy;
-            }
-        }
-        
-        return output;
-    }
-    
     //-------------------------------------
     public void print()
     {
         for(int a = 0; a < 3; a++){
             for (int bin = 0; bin < getNbins(); bin++) {
-                System.out.println("Bin " + bin + " = " +getBinEnergy(a, bin)
-                                   + " +- " + getError(a, bin));
+                System.out.println("Bin " + bin + " = " +getBinEnergy(a, bin));
             }
             System.out.println("The number of fills = " + getNfilled(a));
             System.out.println("Underflow = " + getUnderflow(a)
@@ -196,14 +169,14 @@ class Voxel
             // together with the x-coordinate of the centre of each bin.
             for (int n = 0; n < nbins; n++) {
                 // comma separated values
-                outputFile.println(n + "," + binCentre[i][n] + "," + getBinEnergy(i, n) + "," + getError(i, n));
+                outputFile.println(n + "," + binCentre[i][n] + "," + getBinEnergy(i, n));
             }
             outputFile.close(); // close the output file
             System.out.println(plane[i]+"_"+filename+" written!");
         }
     }
     
-    public void writeSliceData(String filename){
+    public void writeToDiskCombined(String filename){
         PrintWriter outputFile;
         try {
             outputFile = new PrintWriter(filename);
@@ -212,15 +185,40 @@ class Voxel
             return;
         }
         
-        double [][] matrix = getVoxelEnergy(240);
+        outputFile.println("x, Energy, y, Energy, z, Energy,");
+        for(int n = 0; n < nbins; n++){
+            for(int i = 0; i < 3; i++){
+                outputFile.print(binCentre[i][n] + "," + getBinEnergy(i, n)+",");
+            }
+            outputFile.println();
+        }
+        outputFile.close(); // close the output file
+        System.out.println(filename+" written!");
+
+    }
         
+    public void writeZSlice(int zSliceNum){
+        String filename = zSliceNum+"_zSlice.csv";
+        PrintWriter outputFile;
+        try {
+            outputFile = new PrintWriter(filename);
+        } catch (IOException e) {
+            System.err.println("Failed to open file "+filename + ". Histogram data was not saved.");
+            return;
+        }
         for(int i = 0; i < nbins; i++){
             for(int a = 0; a < nbins; a++){
-                outputFile.print(matrix[i][a]+",");
+                outputFile.print(zSlices[zSliceNum][a][i] +",");
             }
             outputFile.println();
         }
         outputFile.close(); // close the output file
         System.out.println(filename+" written!");
     }
+    
+    public void writeData(int zSliceNum, String filename){
+        writeZSlice(zSliceNum);
+        writeToDiskCombined(filename);
+    }
+
 }
