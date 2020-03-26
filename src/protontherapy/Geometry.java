@@ -72,7 +72,6 @@ class Geometry
         
         energy_hist = new Voxel(400, binlow, binhigh, "Z Slices");
         
-        numScatter = 0;
     }
 
     public int getNshapes() { return nshapes; }
@@ -260,7 +259,6 @@ class Geometry
     public void writeEnergyHist(double depth, String filename){
         //energy_hist.writeToDisk(filename);
         energy_hist.writeData(depth, filename);
-        System.out.println(numScatter);
     }
     
     public void doMultScatter(Particle p, double dist)
@@ -277,9 +275,6 @@ class Geometry
         if (Math.abs(theta0) > 0.) {
             p.applySmallRotation(randGen.nextGaussian()*theta0,
                                  randGen.nextGaussian()*theta0);
-            if(getVolume(p) == 1){
-                numScatter++;
-            }
         }
         
     }

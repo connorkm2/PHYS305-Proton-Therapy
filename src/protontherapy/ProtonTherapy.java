@@ -62,7 +62,7 @@ class ProtonTherapy
     static int numberOfEvents = 10000;
     
     // Energy ranges for when we add multiple energy ranges to flatten dose area
-    static final double [][] energies = getEnergies(210, 250);
+    static final double [][] energies = getEnergies(200, 200);
     
     static final double delta = 0.2; // for det hists
     static final double delta_A = 0.05; //For first 4 hists gen and sim theta
@@ -248,8 +248,8 @@ class ProtonTherapy
                              1, 7.42, 18.015);           // density, Z, A
         
         // two 1mm-thin "silicon detectors" 10cm and 20cm after the iron block
-        Experiment.AddCuboid(-0.5, -0.5, 0.32, // start x, y, z
-                             0.5, 0.5, 0.33,   // end   x, y, z
+        Experiment.AddCuboid(-0.5, -0.5, 1.65, // start x, y, z
+                             0.5, 0.5, 1.66,   // end   x, y, z
                              2.33, 14, 28.085);                 // density, Z, A
        
         
