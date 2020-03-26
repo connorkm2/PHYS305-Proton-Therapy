@@ -67,7 +67,7 @@ class ProtonTherapy
     static final double delta = 0.2; // for det hists
     static final double delta_A = 0.05; //For first 4 hists gen and sim theta
     
-    static final int Nb = 100; // for det hists
+    static final int Nb = 400; // for det hists
     static final int Nb_A = 200; //For first 4 hists gen and sim theta
     
     static Random randGen = new Random();
@@ -85,8 +85,8 @@ class ProtonTherapy
         Histogram hist_sim_theta_zy = new Histogram(Nb_A, -delta_A, delta_A, "simulated Theta z-y");
         
         // initialising detector histograms
-        Histogram hist_det_theta_zx2 = new Histogram(Nb, startAngle-delta, startAngle+delta, "measured theta z-x");
-        Histogram hist_det_theta_zy2 = new Histogram(Nb, 0, 3, "detector theta z-y");
+        Histogram hist_det_theta_zx2 = new Histogram(Nb, -0.2, 0.2, "measured theta z-x");
+        Histogram hist_det_theta_zy2 = new Histogram(Nb, -0.2, 0.2, "detector theta z-y");
         Histogram hist_det_theta_zx3 = new Histogram(Nb, startAngle-delta, startAngle+delta, "measured theta z-x");
         Histogram hist_det_theta_zy3 = new Histogram(Nb, 0, 3, "detector theta z-y");
         
@@ -146,7 +146,7 @@ class ProtonTherapy
                     }
                 }
                 // end of simulated particle propagation
-
+                
                 // simulate detection of each particle in each element from the simulated tracks
                 // this is just for dumping the simulation to the screen
     //             for (int ip = 0; ip < Tracks_sim.length; ip++) {
@@ -205,11 +205,14 @@ class ProtonTherapy
 
                 // calculating the detector theta angles
                 double det_theta_zx2 = Math.atan2(x_det2, z_det2);
-                double det_theta_zy2 = Math.atan2(x_det2, y_det2);
+                double det_theta_zy2 = Math.atan2(y_det2, z_det2);
                 double det_theta_zx3 = Math.atan2(x_det3, z_det3);
                 double det_theta_zy3 = Math.atan2(x_det3, y_det3);
 
                 // filling histograms
+//                System.out.println(z_det2);
+//                System.out.println(x_det2);
+//                System.out.println("Dog");
                 hist_det_theta_zx2.fill(det_theta_zx2);
                 hist_det_theta_zy2.fill(det_theta_zy2);
                 hist_det_theta_zx3.fill(det_theta_zx3);
@@ -236,25 +239,25 @@ class ProtonTherapy
         // end of main event loop
 
         // write out histograms for plotting and futher analysis
-        hist_gen_mom.writeToDisk("gen_mom.csv");
-        hist_sim_mom.writeToDisk("sim_mom.csv");
-        
-        hist_gen_theta_zx.writeToDisk("Agen_theta_zx.csv");
-        hist_gen_theta_zy.writeToDisk("Agen_theta_zy.csv");
-        hist_sim_theta_zx.writeToDisk("Asim_theta_zx.csv");
-        hist_sim_theta_zy.writeToDisk("Asim_theta_zy.csv");
+//        hist_gen_mom.writeToDisk("gen_mom.csv");
+//        hist_sim_mom.writeToDisk("sim_mom.csv");
+//        
+//        hist_gen_theta_zx.writeToDisk("gen_theta_zx.csv");
+//        hist_gen_theta_zy.writeToDisk("gen_theta_zy.csv");
+//        hist_sim_theta_zx.writeToDisk("sim_theta_zx.csv");
+//        hist_sim_theta_zy.writeToDisk("sim_theta_zy.csv");
         
         // writing to disk for no smearing
-        hist_det_theta_zx2.writeToDisk("Bdet_theta_zx2.csv");
-        hist_det_theta_zy2.writeToDisk("Bdet_theta_zy2.csv");
-        hist_det_theta_zx3.writeToDisk("Bdet_theta_zx3.csv");
-        hist_det_theta_zy3.writeToDisk("Bdet_theta_zy3.csv");
+        hist_det_theta_zx2.writeToDisk("det_theta_zx2.csv");
+        hist_det_theta_zy2.writeToDisk("det_theta_zy2.csv");
+//        hist_det_theta_zx3.writeToDisk("det_theta_zx3.csv");
+//        hist_det_theta_zy3.writeToDisk("det_theta_zy3.csv");
         
         // writing to disk for smearing
-        hist_det_theta_zx2_smear.writeToDisk("Cdet_theta_zx2_smear.csv");
-        hist_det_theta_zy2_smear.writeToDisk("Cdet_theta_zy2_smear.csv");
-        hist_det_theta_zx3_smear.writeToDisk("Cdet_theta_zx3_smear.csv");
-        hist_det_theta_zy3_smear.writeToDisk("Cdet_theta_zy3_smear.csv");
+//        hist_det_theta_zx2_smear.writeToDisk("det_theta_zx2_smear.csv");
+//        hist_det_theta_zy2_smear.writeToDisk("det_theta_zy2_smear.csv");
+//        hist_det_theta_zx3_smear.writeToDisk("det_theta_zx3_smear.csv");
+//        hist_det_theta_zy3_smear.writeToDisk("det_theta_zy3_smear.csv");
         
         Experiment.writeEnergyHist(271,"energy_hist.csv");
 
@@ -269,23 +272,23 @@ class ProtonTherapy
         // this line defines the size of the experiment in vacuum
         Experiment.AddCuboid(-0.5, -0.5, 0.,                // start x, y, z
 
-                             0.5, 0.5, 0.84,  // end   x, y, z
+                             0.5, 0.5, 1.5,  // end   x, y, z
 
                              0., 0., 0.);                     // zeros for "vacuum"
 
         // Block of tantalum of thickness 1cm
-        Experiment.AddCuboid(-0.20, -0.20, 0.2,            // start x, y, z
-                             0.20, 0.20, 0.21,   // end   x, y, z
+        Experiment.AddCuboid(-0.20, -0.20, 0.01,            // start x, y, z
+                             0.20, 0.20, 0.02,   // end   x, y, z
                              16.65, 73, 180.94788);           // density, Z, A
                 
         // water phantom
-        Experiment.AddCuboid(-0.20, -0.20, 0.21,            // start x, y, z
-                             0.20, 0.20, 0.71,   // end   x, y, z
+        Experiment.AddCuboid(-0.20, -0.20, 0.54,            // start x, y, z
+                             0.20, 0.20, 1.04,   // end   x, y, z
                              1, 7.42, 18.015);           // density, Z, A
         
         // two 1mm-thin "silicon detectors" 10cm and 20cm after the iron block
-        Experiment.AddCuboid(-0.5, -0.5, 0.915, // start x, y, z
-                             0.5, 0.5, 0.92,   // end   x, y, z
+        Experiment.AddCuboid(-0.5, -0.5, 0.52, // start x, y, z
+                             0.5, 0.5, 0.53,   // end   x, y, z
                              2.33, 14, 28.085);                 // density, Z, A
         
         Experiment.AddCuboid(-0.5, -0.5, 0.93, // start x, y, z

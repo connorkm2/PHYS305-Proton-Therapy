@@ -65,8 +65,8 @@ class Geometry
         
         // Got to fix this error
         
-        double [] binlow = {-0.2, -0.2, 0.2};
-        double [] binhigh = {0.2, 0.2, 0.71};
+        double [] binlow = {-0.2, -0.2, 0.54};
+        double [] binhigh = {0.2, 0.2, 1.04};
         
         energy_hist = new Voxel(400, binlow, binhigh, "Z Slices");
     }
@@ -74,7 +74,8 @@ class Geometry
     public int getNshapes() { return nshapes; }
     
     public double bivarGaussian(double x, double y) {
-        double zGauss = (1/(2*Math.PI*sigma_x*sigma_y))*Math.exp(-0.5*((Math.pow(x, 2)/Math.pow(sigma_x,2))+(Math.pow(y, 2)/Math.pow(sigma_y, 2))));
+        double zGauss = (1/(2*Math.PI*sigma_x*sigma_y))
+                *Math.exp(-0.5*((Math.pow(x, 2)/Math.pow(sigma_x,2))+(Math.pow(y, 2)/Math.pow(sigma_y, 2))));
         System.out.println("hamster");
         System.out.println(zGauss);
         return zGauss;
@@ -110,6 +111,32 @@ class Geometry
         return (nshapes-1);
     }
     
+    public int AddContour(double x0, double y0, double z0,
+                          double rhoin, double Zin, double Ain){
+        if (nshapes >= maxShapes){
+            return -1;
+        }
+        
+        type[nshapes] = 2;
+        shapes[nshapes][0] = x0;
+        shapes[nshapes][1] = y0;
+        shapes[nshapes][2] = z0;
+        shapes[nshapes][3] = 0;
+        shapes[nshapes][4] = 0;
+        shapes[nshapes][5] = 0;
+        
+        rho[nshapes] = rhoin;
+        Z[nshapes] = Zin;
+        A[nshapes] = Ain;
+
+        
+        Eloss[nshapes] = new EnergyLoss(rhoin, Zin, Ain);
+        MultScatter[nshapes] = new MCS(rhoin, Zin, Ain);
+        
+        nshapes++;
+        return (nshapes-1);
+    }
+    
     public void Print()
     {
         System.out.println("stored " + getNshapes() + " objects.");
@@ -138,7 +165,8 @@ class Geometry
             return false;
         }
         
-        if (type[id] == 1) {
+        switch(type[id]){
+            case 1:
             // cuboid
             return ( shapes[id][0] <= x
                      && shapes[id][1] <= y
@@ -146,15 +174,31 @@ class Geometry
                      && x <= shapes[id][3]
                      && y <= shapes[id][4]
                      && z <= shapes[id][5] );
-        }
-        
-        if (type[id] == 2) {
-            // coulomb scatter
+            case 2:
+            // contoured scatter
             return ( // base 
                      shapes[id][2] <= z
                     // bivariate Gaussian
                      && z <= bivarGaussian(x, y));
         }
+        
+//        if (type[id] == 1) {
+//            // cuboid
+//            return ( shapes[id][0] <= x
+//                     && shapes[id][1] <= y
+//                     && shapes[id][2] <= z
+//                     && x <= shapes[id][3]
+//                     && y <= shapes[id][4]
+//                     && z <= shapes[id][5] );
+//        }
+//        
+//        if (type[id] == 2) {
+//            // contoured scatter
+//            return ( // base 
+//                     shapes[id][2] <= z
+//                    // bivariate Gaussian
+//                     && z <= bivarGaussian(x, y));
+//        }
         
         return false;
     }
