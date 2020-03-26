@@ -46,6 +46,8 @@ class Geometry
 
     private double minfeaturesize;
     
+    int numScatter;
+    
     int lastpos;
 
     public Geometry(double featuresize)
@@ -65,10 +67,12 @@ class Geometry
         
         // Got to fix this error
         
-        double [] binlow = {-0.2, -0.2, 0.54};
-        double [] binhigh = {0.2, 0.2, 1.04};
+        double [] binlow = {-0.2, -0.2, 0.34};
+        double [] binhigh = {0.2, 0.2, 0.84};
         
         energy_hist = new Voxel(400, binlow, binhigh, "Z Slices");
+        
+        numScatter = 0;
     }
 
     public int getNshapes() { return nshapes; }
@@ -146,6 +150,12 @@ class Geometry
             }
             if (type[i] == 1) {
                 System.out.println("Geometry object #" + i + " = cuboid.");
+                System.out.printf("   corners (%f, %f, %f) - (%f, %f, %f)%n",
+                                  shapes[i][0], shapes[i][1], shapes[i][2],
+                                  shapes[i][3], shapes[i][4], shapes[i][5]);
+            }
+            if (type[i] == 2) {
+                System.out.println("Geometry object #" + i + " = contoured material.");
                 System.out.printf("   corners (%f, %f, %f) - (%f, %f, %f)%n",
                                   shapes[i][0], shapes[i][1], shapes[i][2],
                                   shapes[i][3], shapes[i][4], shapes[i][5]);
@@ -247,9 +257,10 @@ class Geometry
         }
     }
  
-    public void writeEnergyHist(int sliceNum, String filename){
+    public void writeEnergyHist(double depth, String filename){
         //energy_hist.writeToDisk(filename);
-        energy_hist.writeData(sliceNum, filename);
+        energy_hist.writeData(depth, filename);
+        System.out.println(numScatter);
     }
     
     public void doMultScatter(Particle p, double dist)
@@ -266,6 +277,9 @@ class Geometry
         if (Math.abs(theta0) > 0.) {
             p.applySmallRotation(randGen.nextGaussian()*theta0,
                                  randGen.nextGaussian()*theta0);
+            if(getVolume(p) == 1){
+                numScatter++;
+            }
         }
         
     }

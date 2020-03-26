@@ -197,7 +197,9 @@ class Voxel
 
     }
         
-    public void writeZSlice(int zSliceNum){
+    public void writeZSlice(double depth){
+        int zSliceNum = (int) ((depth - binlow[2])/binwidth[2]);
+        
         String filename = zSliceNum+"_zSlice.csv";
         PrintWriter outputFile;
         try {
@@ -216,8 +218,8 @@ class Voxel
         System.out.println(filename+" written!");
     }
     
-    public void writeData(int zSliceNum, String filename){
-        writeZSlice(zSliceNum);
+    public void writeData(double depth, String filename){
+        writeZSlice(depth);
         writeToDiskCombined(filename);
     }
 
