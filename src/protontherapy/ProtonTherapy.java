@@ -328,7 +328,7 @@ class ProtonTherapy
         double p = 1.77;
         
         energies[0][0] = startE;
-        energies[0][1] = 1 - Math.pow(1 - 1/(2*numPeaks), (1 - 1/p));
+        energies[0][1] = 1 - Math.pow(1 - 1/(2*(double)numPeaks), (1 - 1/p));
         
         for(int i = 1; i < numPeaks; i++){
             
@@ -337,14 +337,13 @@ class ProtonTherapy
             
             // calculating weights
             if ( i == numPeaks ) {
-                energies[i][1] = Math.pow(1/(2*numPeaks), (1 - 1/p));
+                energies[i][1] = Math.pow(1/(2*(double)numPeaks), (1 - 1/p));
             }
             else {
-                energies[i][1] = (1-(1/numPeaks)*Math.pow(i - 0.5, (1 - 1/p))) - 
-                        (1 - (1/numPeaks)*Math.pow((i + 0.5), (1-1/p)));
-                System.out.println(energies[i][1]);
+                energies[i][1] = (1-(1/(double)numPeaks)*Math.pow(i - 0.5, (1 - 1/p))) - 
+                        (1 - (1/(double)numPeaks)*Math.pow((i + 0.5), (1-1/p)));
             }
-            
+            System.out.println(energies[i][1]);
 //            Going to remove this as it is dealt with later in the code as before
 
 //            // multiplying number of particles by weights
