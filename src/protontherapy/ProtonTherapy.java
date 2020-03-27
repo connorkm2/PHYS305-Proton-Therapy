@@ -351,7 +351,6 @@ class ProtonTherapy
             }
             
             System.out.println(energies);
-            System.out.println("hamster");
             
             
         }
