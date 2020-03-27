@@ -323,8 +323,8 @@ class ProtonTherapy
         int numPeaks = 4;
         
         double initialRange = (0.0022*Math.pow(startE, 1.8));
-        // coluumn 1 stores energies, column 2 stores weights, column 3 stores particle numbers 
-        double [][] energies = new double[numPeaks][3];
+        // coluumn 1 stores energies, column 2 stores weights 
+        double [][] energies = new double[numPeaks][2];
         double p = 1.77;
         
         energies[0][0] = startE;
@@ -334,7 +334,6 @@ class ProtonTherapy
             
             double nextEnergy = Math.pow(((initialRange-(0.006*i))/0.0022),1/1.8);
             energies[i][0] = nextEnergy;
-            energies[i][1] = Math.exp(-.000001*nextEnergy);
             
             // calculating weights
             if ( i == numPeaks ) {
@@ -343,15 +342,15 @@ class ProtonTherapy
             else {
                 energies[i][1] = (1-(1/numPeaks)*Math.pow(i - 0.5, (1 - 1/p))) - 
                         (1 - (1/numPeaks)*Math.pow((i + 0.5), (1-1/p)));
+                System.out.println(energies[i][1]);
             }
             
-            // multiplying number of particles by weights
-            for(int k = 0; k < numPeaks; k++) {
-            energies[k][2] = energies[k][1]*numberOfEvents; 
-            }
-            
-            System.out.println(energies);
-            
+//            Going to remove this as it is dealt with later in the code as before
+
+//            // multiplying number of particles by weights
+//            for(int k = 0; k < numPeaks; k++) {
+//            energies[k][2] = energies[k][1]*numberOfEvents; 
+//            }            
             
         }
         
