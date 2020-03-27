@@ -323,17 +323,42 @@ class ProtonTherapy
         int numPeaks = 4;
         
         double initialRange = (0.0022*Math.pow(startE, 1.8));
-        double [][] energies = new double[numPeaks][2];
+        // coluumn 1 stores energies, column 2 stores weights, column 3 stores particle numbers 
+        double [][] energies = new double[numPeaks][3];
+        double p = 1.77;
         
         energies[0][0] = startE;
-        for(int i = 1; i < numPeaks;i++){
+        energies[0][1] = 1 - Math.pow(1 - 1/(2*numPeaks), (1 - 1/p));
+        
+        for(int i = 1; i < numPeaks; i++){
+            
             double nextEnergy = Math.pow(((initialRange-(0.006*i))/0.0022),1/1.8);
             energies[i][0] = nextEnergy;
-            
             energies[i][1] = Math.exp(-.000001*nextEnergy);
-            System.out.println(energies[i][1]);
+            
+            // calculating weights
+            if ( i == numPeaks ) {
+                energies[i][1] = Math.pow(1/(2*numPeaks), (1 - 1/p));
+            }
+            else {
+                energies[i][1] = (1-(1/numPeaks)*Math.pow(i - 0.5, (1 - 1/p))) - 
+                        (1 - (1/numPeaks)*Math.pow((i + 0.5), (1-1/p)));
+            }
+            
+            // multiplying number of particles by weights
+            for(int k = 0; k < numPeaks; k++) {
+            energies[k][2] = energies[k][1]*numberOfEvents; 
+            }
+            
+            System.out.println(energies);
+            System.out.println("hamster");
+            
+            
         }
         
         return energies;
+        
     }
+    
+   
 }
