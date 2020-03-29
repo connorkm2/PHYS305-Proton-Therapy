@@ -8,7 +8,8 @@ import java.util.Arrays;
 import java.io.*;
 
 class Voxel
-{       
+{ 
+    private boolean plotPP;
     private double [] binlow, binhigh;
     private double [] binwidth;
     private int nbins;
@@ -16,7 +17,7 @@ class Voxel
     private String histname;
 
     // double array to store the actual histogram data
-    private double[][] sumBinEnergy;
+    private double[][][] sumBinEnergy;
 
     private long [] underflow, overflow;
     private long [] nfilled;
@@ -25,35 +26,34 @@ class Voxel
     private double[][][] zSlices;
 
     // constructor for the class Histogram
-    public Voxel(int numberOfBins, double [] start, double [] end, String name)
+    public Voxel(int numberOfBins, double [] start, double [] end, String name, boolean plotBraggPeaks)
     {
         // store the parameters and setup the histogram
         // note that parameters need to have different names than class variables
         nbins = numberOfBins;
         
-        // need bins in 3 dimensions
-        binlow = start; // beginning voxel coordinate
-        binhigh = end; // end voxel coordinate
+        // switches some functions to plot individual bragg peaks
+        plotPP = plotBraggPeaks;
         
+        binlow = start; // beginning coordinates
+        binhigh = end; // end coordinates
         
         histname = name;
-        
-        //System.out.println(binwidth[0]);
-        
+                
         binwidth = new double[3];
         
         // variables 
         for(int i = 0; i < binlow.length; i++){
             binwidth[i] = (binhigh[i] - binlow[i]) / (double) nbins;
         }
-        sumBinEnergy = new double[3][nbins];
+        sumBinEnergy = new double[ProtonTherapy.energies.length][3][nbins];
         underflow = new long[3];
         overflow = new long[3];
         nfilled = new long[3];
         
         zSlices = new double[nbins][nbins][nbins];
                 
-        // calculate and save the z coordinate of the centre of each bin
+        // calculate the centre of each bin for all dimensions
         binCentre = new double[3][nbins];
         for(int a = 0; a < 3; a++){
             for (int i = 0; i < nbins; i++) {
@@ -82,9 +82,15 @@ class Voxel
         return nfilled[i];
     }
     
-    public void fill(double energy, Particle p){
+//    double energy: the value of energy depositited. 
+//    int ke: position value of energy of current itteration in main of ProtonTherapy.
+//    If output is normal combined bragg peak (ke = 0)
+    public void fill(double energy, Particle p, int ke){
         fillzSlices(energy, p);
+        
+        if(!plotPP){ ke = 0; }
         double [] position = {p.x, p.y, p.z};
+        
         for(int i = 0; i < binlow.length; i++){
             if (position[i] < binlow[i]) {
                 underflow[i]++;
@@ -95,12 +101,7 @@ class Voxel
             } else {
 
                 int ibin = (int) ((position[i] - binlow[i])/binwidth[i]);
-                //            System.out.println("Cheetah");
-                //            System.out.println(p.z);
-                //            System.out.println(binlow_z);
-                //            System.out.println(binwidth);
-                sumBinEnergy[i][ibin] = sumBinEnergy[i][ibin] + energy;
-                //sumWeights[ibin] = sumWeights[ibin] + 1.0;
+                sumBinEnergy[ke][i][ibin] = sumBinEnergy[ke][i][ibin] + energy*(ProtonTherapy.energies[ke][1]);
             }
                 // increases filled bin count by one
                 nfilled[i]++;
@@ -120,12 +121,13 @@ class Voxel
         zSlices[zBin][xBin][yBin] = zSlices[zBin][xBin][yBin] + energy;
         
     }
-
-    // 
-    public double getBinEnergy(int i, int nbin)
+    
+//    i : selection for x,y,z
+//    int ke: position value of energy of current itteration in main of ProtonTherapy.
+    public double getBinEnergy(int ke, int i, int nbin)
     {
         // returns the contents on bin 'nbin' to the user
-        return sumBinEnergy[i][nbin];
+        return sumBinEnergy[ke][i][nbin];
     }
         
     //-------------------------------------
@@ -133,7 +135,7 @@ class Voxel
     {
         for(int a = 0; a < 3; a++){
             for (int bin = 0; bin < getNbins(); bin++) {
-                System.out.println("Bin " + bin + " = " +getBinEnergy(a, bin));
+                System.out.println("Bin " + bin + " = " +getBinEnergy(0, a, bin));
             }
             System.out.println("The number of fills = " + getNfilled(a));
             System.out.println("Underflow = " + getUnderflow(a)
@@ -171,13 +173,15 @@ class Voxel
             // together with the x-coordinate of the centre of each bin.
             for (int n = 0; n < nbins; n++) {
                 // comma separated values
-                outputFile.println(n + "," + binCentre[i][n] + "," + getBinEnergy(i, n));
+                outputFile.println(n + "," + binCentre[i][n] + "," + getBinEnergy(0, i, n));
             }
             outputFile.close(); // close the output file
             System.out.println(plane[i]+"_"+filename+" written!");
         }
     }
     
+//    This function is simply an alternative to the original writeToDisk above. It 
+//    combines x,y,z to one file to make plotting easier when debugging.
     public void writeToDiskCombined(String filename){
         PrintWriter outputFile;
         try {
@@ -190,7 +194,7 @@ class Voxel
         outputFile.println("x, Energy, y, Energy, z, Energy,");
         for(int n = 0; n < nbins; n++){
             for(int i = 0; i < 3; i++){
-                outputFile.print(binCentre[i][n] + "," + getBinEnergy(i, n)+",");
+                outputFile.print(binCentre[i][n] + "," + getBinEnergy(0, i, n)+",");
             }
             outputFile.println();
         }
@@ -198,7 +202,38 @@ class Voxel
         System.out.println(filename+" written!");
 
     }
+    
+//    This fucntion outputs the individual pristine peaks of the simulation.
+//    Can be useful for investigating weightings and also for nice plots.
+//    This fucntion is only called if plotPP is true. This is set when creating 
+//    an instance on Voxel class.
+    public void writeToDiskPP(String filename){
+        PrintWriter outputFile;
+        try {
+            outputFile = new PrintWriter(filename);
+        } catch (IOException e) {
+            System.err.println("Failed to open file "+filename + ". Histogram data was not saved.");
+            return;
+        }
+        outputFile.print("z,");
+        for(int i = 0; i < ProtonTherapy.energies.length; i++){
+            outputFile.print("PP #"+(i+1)+" ("+ProtonTherapy.energies[i][0]+"MeV),");
+        }
+        outputFile.println();
+        for(int n = 0; n < nbins; n++){
+            outputFile.print(binCentre[2][n]+",");
+            for(int i = 0; i < ProtonTherapy.energies.length; i++){
+                outputFile.print(getBinEnergy(i, 2, n)+",");
+            }
+            outputFile.println();
+        }
+        outputFile.close(); // close the output file
+        System.out.println(filename+" written!");
+    }
         
+//    Outputs a csv file which consists of enrgy deposition data in a grid of x,y 
+//    for a particular slice of z (specific bin value). 
+//    double depth: the value of z in meters of the desired slice.
     public void writeZSlice(double depth){
         int zSliceNum = (int) ((depth - binlow[2])/binwidth[2]);
         
@@ -220,10 +255,17 @@ class Voxel
         System.out.println(filename+" written!");
     }
     
+//    This function is called so that it makes use of the output fucntions above 
+//    makes it easier for dunping data.
     public void writeData(double depth, String filename){
+        System.out.println(plotPP);
+        if(plotPP == true){
+            writeToDiskPP("bragg_peaks.csv");
+        }else{
+            writeToDiskCombined(filename);
+        }
         writeZSlice(depth);
-        writeToDiskCombined(filename);
-        System.out.println(Arrays.toString(binwidth));
+
     }
 
 }

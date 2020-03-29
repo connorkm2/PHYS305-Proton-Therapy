@@ -25,7 +25,7 @@ public class ParticleTracker
         storeTrack.savePositionMomentum(input);
     }
 
-    public Particle track(Geometry Experiment)
+    public Particle track(Geometry Experiment, int ke)
     {
         // make two copies of the input particle:
         // output will evolve to the final particle, lastStep will keep the state before the last step
@@ -60,7 +60,7 @@ public class ParticleTracker
                 
             // implement Energy Loss, uncomment to use
             if (output.E() > output.mass()) {
-                Experiment.doEloss(output, output.distance(lastStep));
+                Experiment.doEloss(output, output.distance(lastStep), ke);
             }
             
             // store the current position/mometum

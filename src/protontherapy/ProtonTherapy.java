@@ -59,10 +59,10 @@ class ProtonTherapy
     static final double startAngle = 0;      // Radians
     
     // Number of events to simulate (ie. the number of particles)
-    static int numberOfEvents = 10000;
+    static int numberOfEvents = 1000;
     
     // Energy ranges for when we add multiple energy ranges to flatten dose area
-    static final double [][] energies = getEnergies(200, 200);
+    static final double [][] energies = getEnergiesNEW2(200);
     
     static final double delta = 0.2; // for det hists
     static final double delta_A = 0.05; //For first 4 hists gen and sim theta
@@ -74,7 +74,7 @@ class ProtonTherapy
     
     public static void main (String [] args )
     {
-        System.out.println(Arrays.deepToString(getEnergiesNEW(250)));
+        System.out.println(Arrays.deepToString(getEnergiesNEW2(200)));
         // setup histograms for analysis
         Histogram hist_gen_mom = new Histogram(50, 0., 150*1.01, "initial generated Momentum");
         Histogram hist_sim_mom = new Histogram(50, 0., 150*1.01, "simulated final Momentum");
@@ -92,15 +92,13 @@ class ProtonTherapy
         // Define the genotrical properties of the experiment in method SetupExperiment()
         Geometry Experiment = SetupExperiment();
                 
-        for(int ke = 0; ke < energies.length; ke++){
+        for(int ke = energies.length-1; ke > 0; ke--){
             // start of main loop: run the simulation numberOfEvents times
             
-            // Added for weighting the subsequent beams
-            numberOfEvents = (int) Math.rint( numberOfEvents*energies[ke][1]);
-           System.out.println(numberOfEvents);
-//            if(ke == 1){
-//                numberOfEvents = numberOfEvents/2;
-//            }
+//            // Added for weighting the subsequent beams
+//            numberOfEvents = (int) Math.rint( numberOfEvents*energies[ke][1]);
+//           System.out.println(numberOfEvents);
+System.out.println(energies[ke][0]);
             
             for (int nev = 0; nev < numberOfEvents; nev++) {
 
@@ -123,10 +121,10 @@ class ProtonTherapy
 
                     ParticleTracker tracker = new ParticleTracker(Particles_gen[ip], time, nsteps, useRungeKutta4);
 
-                    Particles_sim[ip] = tracker.track(Experiment);
+                    Particles_sim[ip] = tracker.track(Experiment, ke);
 
-                    // System.out.println("Output particle");
-                    // Particles_sim[ip].print();
+//                     System.out.println("Output particle");
+//                     Particles_sim[ip].print();
 
                     // save the full simulated track for later analysis
                     Tracks_sim[ip] = tracker.getTrack();
@@ -235,22 +233,22 @@ class ProtonTherapy
 
                              0.5, 0.5, 1.5,  // end   x, y, z
 
-                             0., 0., 0.);                     // zeros for "vacuum"
+                             0., 0., 0., "Vacuum");                     // zeros for "vacuum"
 
         // Block of tantalum of thickness 1cm
         Experiment.AddCuboid(-0.20, -0.20, 0.01,            // start x, y, z
                              0.20, 0.20, 0.02,   // end   x, y, z
-                             16.65, 73, 180.94788);           // density, Z, A
+                             16.65, 73, 180.94788, "Tantalum scatterer");           // density, Z, A
                 
         // water phantom
-        Experiment.AddCuboid(-0.20, -0.20, 0.34,            // start x, y, z
-                             0.20, 0.20, 0.84,   // end   x, y, z
-                             1, 7.42, 18.015);           // density, Z, A
+        Experiment.AddCuboid(-0.20, -0.20, 0.22,            // start x, y, z
+                             0.20, 0.20, 0.72,   // end   x, y, z
+                             1, 7.42, 18.015, "Water phantom");           // density, Z, A
         
         // two 1mm-thin "silicon detectors" 10cm and 20cm after the iron block
         Experiment.AddCuboid(-0.5, -0.5, 1.65, // start x, y, z
                              0.5, 0.5, 1.66,   // end   x, y, z
-                             2.33, 14, 28.085);                 // density, Z, A
+                             2.33, 14, 28.085, "Si detector");                 // density, Z, A
        
         
         Experiment.Print();
@@ -320,9 +318,9 @@ class ProtonTherapy
 //    but it is based on the paramters from the book.
     
     public static double[][] getEnergiesNEW(double startE){
-        int numPeaks = 4;
+        int numPeaks = 16;
         
-        double initialRange = (0.0022*Math.pow(startE, 1.8));
+        double initialRange = (0.0022*Math.pow(startE, 1.8)); // cm
         // coluumn 1 stores energies, column 2 stores weights 
         double [][] energies = new double[numPeaks][2];
         double p = 1.77;
@@ -331,8 +329,8 @@ class ProtonTherapy
         energies[0][1] = 1 - Math.pow(1 - 1/(2*(double)numPeaks), (1 - 1/p));
         
         for(int i = 1; i < numPeaks; i++){
-            
-            double nextEnergy = Math.pow(((initialRange-(0.006*i))/0.0022),1/1.8);
+            double nextEnergy = Math.pow(((initialRange-(0.6*i))/0.0022),1/1.8);
+            //System.out.println(i);
             energies[i][0] = nextEnergy;
             
             // calculating weights
@@ -343,7 +341,7 @@ class ProtonTherapy
                 energies[i][1] = (1-(1/(double)numPeaks)*Math.pow(i - 0.5, (1 - 1/p))) - 
                         (1 - (1/(double)numPeaks)*Math.pow((i + 0.5), (1-1/p)));
             }
-            System.out.println(energies[i][1]);
+            System.out.println(energies[i][0]);
 //            Going to remove this as it is dealt with later in the code as before
 
 //            // multiplying number of particles by weights
@@ -355,6 +353,45 @@ class ProtonTherapy
         
         return energies;
         
+    }
+    
+    public static double [][] getEnergiesNEW2(double startE){
+        double p = 1.04;
+        int numPeaks = 10;
+        double R_0 = 0.0022*Math.pow(startE, p);
+        double targetWidth = R_0*0.15;
+//        System.out.println(R_0);
+//        System.out.println(targetWidth);
+//        System.out.println("dog");
+
+        
+        double [][] energies = new double[numPeaks+1][2];
+        
+        for(int k = 0; k < numPeaks;k++){
+            //if(k == 6){ p = 1.4; }
+            double range  = (1-((1-((double)k/(double)numPeaks))*targetWidth))*R_0;
+            energies[k][0] = Math.pow((range/0.0022), 1/p);
+            //energies[k][0] = Math.pow(((R_0-(0.06*(double)(numPeaks-k)))/0.0022),1/p);
+            System.out.println(energies[k][0]);
+            
+            if(k == 0){
+                //energies[k][1] = Math.pow((1-(1/(2*(double)numPeaks))),1-(1/p));
+                energies[k][1] = Math.pow(1-((1/(double)numPeaks)*((double)k - 0.5)),1-(1/p))
+                        - Math.pow(1-((1/(double)numPeaks)*((double)k + 0.5)),1-(1/p));
+            }else if(k == numPeaks){
+                energies[k][1] = Math.pow((1/(2*(double)numPeaks)), 1-(1/p));
+            }else{
+                energies[k][1] = Math.pow(1-((1/(double)numPeaks)*((double)k - 0.5)),1-(1/p))
+                        - Math.pow(1-((1/(double)numPeaks)*((double)k + 0.5)),1-(1/p));
+            }
+            //System.out.println(k);
+        }
+        
+        energies[numPeaks][0] = startE;
+        energies[numPeaks][1] = 1;
+        
+        return energies;
+
     }
     
    

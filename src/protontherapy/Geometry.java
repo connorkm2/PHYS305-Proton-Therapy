@@ -33,6 +33,7 @@ class Geometry
     private double [] rho;
     private double [] Z;
     private double [] A;
+    private String [] names;
     
     private double sigma_x = 0.05;
     private double sigma_y = 0.05;
@@ -59,6 +60,7 @@ class Geometry
         Z = new double[maxShapes];
         A = new double[maxShapes];
         shapes = new double[maxShapes][];
+        names = new String[maxShapes];
         
         Eloss = new EnergyLoss[maxShapes];
         MultScatter = new MCS[maxShapes];
@@ -67,10 +69,11 @@ class Geometry
         
         // Got to fix this error
         
-        double [] binlow = {-0.2, -0.2, 0.34};
-        double [] binhigh = {0.2, 0.2, 0.84};
+        double [] binlow = {-0.2, -0.2, 0.22};
+        double [] binhigh = {0.2, 0.2, 0.72};
         
-        energy_hist = new Voxel(400, binlow, binhigh, "Z Slices");
+//        Set last parameter to true to output individual bragg peaks        
+        energy_hist = new Voxel(400, binlow, binhigh, "Z Slices", false);
         
     }
 
@@ -87,7 +90,8 @@ class Geometry
 
     public int AddCuboid(double x0, double y0, double z0,
                          double x1, double y1, double z1,
-                         double rhoin, double Zin, double Ain)
+                         double rhoin, double Zin, double Ain,
+                         String name)
     {
         if (nshapes >= maxShapes) {
             return -1;
@@ -105,6 +109,7 @@ class Geometry
         rho[nshapes] = rhoin;
         Z[nshapes] = Zin;
         A[nshapes] = Ain;
+        names[nshapes] = name;
 
         
         Eloss[nshapes] = new EnergyLoss(rhoin, Zin, Ain);
@@ -115,7 +120,9 @@ class Geometry
     }
     
     public int AddContour(double x0, double y0, double z0,
-                          double rhoin, double Zin, double Ain){
+                          double rhoin, double Zin, double Ain,
+                          String name){
+        
         if (nshapes >= maxShapes){
             return -1;
         }
@@ -131,7 +138,7 @@ class Geometry
         rho[nshapes] = rhoin;
         Z[nshapes] = Zin;
         A[nshapes] = Ain;
-
+        names[nshapes] = name;
         
         Eloss[nshapes] = new EnergyLoss(rhoin, Zin, Ain);
         MultScatter[nshapes] = new MCS(rhoin, Zin, Ain);
@@ -148,13 +155,13 @@ class Geometry
                 System.out.println("Maximum size of experiment given by object 0:");
             }
             if (type[i] == 1) {
-                System.out.println("Geometry object #" + i + " = cuboid.");
+                System.out.println("Geometry object #" + i + " = cuboid. ("+names[i]+".)");
                 System.out.printf("   corners (%f, %f, %f) - (%f, %f, %f)%n",
                                   shapes[i][0], shapes[i][1], shapes[i][2],
                                   shapes[i][3], shapes[i][4], shapes[i][5]);
             }
             if (type[i] == 2) {
-                System.out.println("Geometry object #" + i + " = contoured material.");
+                System.out.println("Geometry object #" + i + " = contoured material.("+names[i]+".)");
                 System.out.printf("   corners (%f, %f, %f) - (%f, %f, %f)%n",
                                   shapes[i][0], shapes[i][1], shapes[i][2],
                                   shapes[i][3], shapes[i][4], shapes[i][5]);
@@ -237,7 +244,7 @@ class Geometry
         return getVolume(p.x, p.x, p.z);
     }
     
-    public void doEloss(Particle p, double dist)
+    public void doEloss(Particle p, double dist, int beamWeight)
     {
         int volume = getVolume(p);
         
@@ -250,7 +257,7 @@ class Geometry
 //                System.out.println(p.z);
 //                double stdev = 0.1;
 //                double smearing = randGen.nextGaussian()*stdev;
-                energy_hist.fill(lostE, p);
+                energy_hist.fill(lostE, p, beamWeight);
 
             }
         }
