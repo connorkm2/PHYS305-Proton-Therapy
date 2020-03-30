@@ -1,5 +1,6 @@
 package protontherapy;
 
+import static java.lang.Math.sin;
 import java.util.Arrays;
 import java.util.Random;
 
@@ -356,24 +357,30 @@ System.out.println(energies[ke][0]);
     }
     
     public static double [][] getEnergiesNEW2(double startE){
-        double p = 1.04;
+        double p = 1.5;
         int numPeaks = 10;
-        double R_0 = 0.0022*Math.pow(startE, p);
+        double a = 0.0022; //cm^-2
+        double R_0 = a*Math.pow(startE, p);
+        double steps = R_0/numPeaks;
         double targetWidth = R_0*0.15;
-//        System.out.println(R_0);
-//        System.out.println(targetWidth);
-//        System.out.println("dog");
+        double water_density = 1000; //kgm^-3
+        System.out.println("max range");
+        System.out.println(R_0);
 
-        
-        double [][] energies = new double[numPeaks+1][2];
+        // first column are energies, second column are weightings, third column is ranges
+        double [][] energies = new double[numPeaks+1][3];
         
         for(int k = 0; k < numPeaks;k++){
-            //if(k == 6){ p = 1.4; }
-            double range  = (1-((1-((double)k/(double)numPeaks))*targetWidth))*R_0;
-            energies[k][0] = Math.pow((range/0.0022), 1/p);
-            //energies[k][0] = Math.pow(((R_0-(0.06*(double)(numPeaks-k)))/0.0022),1/p);
-            System.out.println(energies[k][0]);
             
+            //energies[k][0] = Math.pow((max_range/0.0022), 1/p);
+            energies[k][0] = startE + k*steps;
+            energies[k][2] = R_0 + a * Math.pow(energies[k][0], (-1/p));
+            
+            //energies[k][0] = Math.pow(((R_0-(0.06*(double)(numPeaks-k)))/0.0022),1/p);
+            //System.out.println(energies[k][0]);
+            
+            /*
+            old code
             if(k == 0){
                 //energies[k][1] = Math.pow((1-(1/(2*(double)numPeaks))),1-(1/p));
                 energies[k][1] = Math.pow(1-((1/(double)numPeaks)*((double)k - 0.5)),1-(1/p))
@@ -385,14 +392,26 @@ System.out.println(energies[ke][0]);
                         - Math.pow(1-((1/(double)numPeaks)*((double)k + 0.5)),1-(1/p));
             }
             //System.out.println(k);
+*/
+            // new weighting - https://iopscience.iop.org/article/10.1088/0031-9155/41/8/006/pdf
+            if(k == numPeaks){
+                energies[k][1] = (water_density * targetWidth * (Math.pow(a, (1/p)) * (sin(Math.PI/p)*Math.pow(p,2))/(Math.PI*(p - 1)))*
+                        Math.pow((steps/2),(1 - 1/p)));
+            }else{
+                energies[k][1] = (water_density * targetWidth * (Math.pow(a, (1/p)) * (sin(Math.PI/p) * Math.pow(p,2))/(Math.PI*(p - 1))) *
+                        (Math.pow(((energies[k][2] - R_0) + (steps/2)), (1 - 1/p)) 
+                        - Math.pow(((energies[k][2] - R_0) - (steps/2)), (1 - 1/p))));
         }
         
         energies[numPeaks][0] = startE;
         energies[numPeaks][1] = 1;
+        //System.out.println(energies);
+        //System.out.println("antelope");
         
+        }
         return energies;
 
-    }
     
-   
+    
+    }
 }
