@@ -73,7 +73,7 @@ class Geometry
         double [] binhigh = {0.2, 0.2, 0.72};
         
 //        Set last parameter to true to output individual bragg peaks        
-        energy_hist = new Voxel(400, binlow, binhigh, "Z Slices", false);
+        energy_hist = new Voxel(400, binlow, binhigh, "Z Slices", true);
         
     }
 

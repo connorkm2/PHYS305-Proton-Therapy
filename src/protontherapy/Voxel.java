@@ -101,7 +101,7 @@ class Voxel
             } else {
 
                 int ibin = (int) ((position[i] - binlow[i])/binwidth[i]);
-                sumBinEnergy[ke][i][ibin] = sumBinEnergy[ke][i][ibin] + energy*(ProtonTherapy.energies[ke][1]);
+                sumBinEnergy[ke][i][ibin] = sumBinEnergy[ke][i][ibin] + energy;//*(ProtonTherapy.energies[ke][1]);
             }
                 // increases filled bin count by one
                 nfilled[i]++;

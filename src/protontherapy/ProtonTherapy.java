@@ -60,10 +60,10 @@ class ProtonTherapy
     static final double startAngle = 0;      // Radians
     
     // Number of events to simulate (ie. the number of particles)
-    static int numberOfEvents = 1000;
+    static int numberOfEvents = 10000;
     
     // Energy ranges for when we add multiple energy ranges to flatten dose area
-    static final double [][] energies = getEnergiesNEW2(200);
+    static final double [][] energies = getEnergiesNEW(200);
     
     static final double delta = 0.2; // for det hists
     static final double delta_A = 0.05; //For first 4 hists gen and sim theta
@@ -75,7 +75,7 @@ class ProtonTherapy
     
     public static void main (String [] args )
     {
-        System.out.println(Arrays.deepToString(getEnergiesNEW2(200)));
+        System.out.println(Arrays.deepToString(getEnergiesNEW(200)));
         // setup histograms for analysis
         Histogram hist_gen_mom = new Histogram(50, 0., 150*1.01, "initial generated Momentum");
         Histogram hist_sim_mom = new Histogram(50, 0., 150*1.01, "simulated final Momentum");
@@ -93,15 +93,15 @@ class ProtonTherapy
         // Define the genotrical properties of the experiment in method SetupExperiment()
         Geometry Experiment = SetupExperiment();
                 
-        for(int ke = energies.length-1; ke > 0; ke--){
+        for(int ke = 0; ke < energies.length; ke++){
             // start of main loop: run the simulation numberOfEvents times
             
 //            // Added for weighting the subsequent beams
-//            numberOfEvents = (int) Math.rint( numberOfEvents*energies[ke][1]);
+            int np = (int) Math.rint( numberOfEvents*energies[ke][1]);
 //           System.out.println(numberOfEvents);
-System.out.println(energies[ke][0]);
+            System.out.println(np);
             
-            for (int nev = 0; nev < numberOfEvents; nev++) {
+            for (int nev = 0; nev < np; nev++) {
 
                 if (nev % 1000 == 0) {
                     //System.out.println("Simulating event " + nev);
@@ -319,42 +319,36 @@ System.out.println(energies[ke][0]);
 //    but it is based on the paramters from the book.
     
     public static double[][] getEnergiesNEW(double startE){
-        int numPeaks = 16;
+        int numPeaks = 10;
         
-        double initialRange = (0.0022*Math.pow(startE, 1.8)); // cm
+        double R_0 = (0.0022*Math.pow(startE, 1.8)); // cm
         // coluumn 1 stores energies, column 2 stores weights 
         double [][] energies = new double[numPeaks][2];
         double p = 1.77;
+        double steps = R_0/numPeaks;
         
-        energies[0][0] = startE;
-        energies[0][1] = 1 - Math.pow(1 - 1/(2*(double)numPeaks), (1 - 1/p));
+//        energies[0][0] = startE;
+//        energies[0][1] = 1 - Math.pow(1 - 1/(2*(double)numPeaks), (1 - 1/p));
         
-        for(int i = 1; i < numPeaks; i++){
-            double nextEnergy = Math.pow(((initialRange-(0.6*i))/0.0022),1/1.8);
+        for(int i = 0; i < numPeaks; i++){
+            //double nextEnergy = Math.pow(((R_0-(0.6*i))/0.0022),1/1.8);
             //System.out.println(i);
-            energies[i][0] = nextEnergy;
-            
-            // calculating weights
-            if ( i == numPeaks ) {
-                energies[i][1] = Math.pow(1/(2*(double)numPeaks), (1 - 1/p));
+            if(i==0){
+            energies[i][0] = startE - i*steps;;
+            energies[i][1] = 1;    
+            }else{
+                energies[i][0] = startE - i*steps;;
+                energies[i][1] = 0.3*Math.pow(i, -0.37);
             }
-            else {
-                energies[i][1] = (1-(1/(double)numPeaks)*Math.pow(i - 0.5, (1 - 1/p))) - 
-                        (1 - (1/(double)numPeaks)*Math.pow((i + 0.5), (1-1/p)));
-            }
+            System.out.println(energies[i][1]);
             System.out.println(energies[i][0]);
-//            Going to remove this as it is dealt with later in the code as before
-
-//            // multiplying number of particles by weights
-//            for(int k = 0; k < numPeaks; k++) {
-//            energies[k][2] = energies[k][1]*numberOfEvents; 
-//            }            
-            
+            System.out.println("dog");
         }
         
         return energies;
         
     }
+    
     
     public static double [][] getEnergiesNEW2(double startE){
         double p = 1.5;
@@ -364,8 +358,8 @@ System.out.println(energies[ke][0]);
         double steps = R_0/numPeaks;
         double targetWidth = R_0*0.15;
         double water_density = 1000; //kgm^-3
-        System.out.println("max range");
-        System.out.println(R_0);
+//        System.out.println("max range");
+//        System.out.println(R_0);
 
         // first column are energies, second column are weightings, third column is ranges
         double [][] energies = new double[numPeaks+1][3];
@@ -375,6 +369,7 @@ System.out.println(energies[ke][0]);
             //energies[k][0] = Math.pow((max_range/0.0022), 1/p);
             energies[k][0] = startE + k*steps;
             energies[k][2] = R_0 + a * Math.pow(energies[k][0], (-1/p));
+//            System.out.println(energies[k][2]);
             
             //energies[k][0] = Math.pow(((R_0-(0.06*(double)(numPeaks-k)))/0.0022),1/p);
             //System.out.println(energies[k][0]);
@@ -399,8 +394,8 @@ System.out.println(energies[ke][0]);
                         Math.pow((steps/2),(1 - 1/p)));
             }else{
                 energies[k][1] = (water_density * targetWidth * (Math.pow(a, (1/p)) * (sin(Math.PI/p) * Math.pow(p,2))/(Math.PI*(p - 1))) *
-                        (Math.pow(((energies[k][2] - R_0) + (steps/2)), (1 - 1/p)) 
-                        - Math.pow(((energies[k][2] - R_0) - (steps/2)), (1 - 1/p))));
+                        (Math.pow(((energies[k][2]) + (steps/2)), (1 - 1/p)) 
+                        - Math.pow(((energies[k][2]) - (steps/2)), (1 - 1/p))));
         }
         
         energies[numPeaks][0] = startE;
