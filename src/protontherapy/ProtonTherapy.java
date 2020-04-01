@@ -319,12 +319,11 @@ class ProtonTherapy
 //    but it is based on the paramters from the book.
     
     public static double[][] getEnergiesNEW(double startE){
-        int numPeaks = 10;
+        int numPeaks = 25;
         
         double R_0 = (0.0022*Math.pow(startE, 1.8)); // cm
         // coluumn 1 stores energies, column 2 stores weights 
         double [][] energies = new double[numPeaks][2];
-        double p = 1.77;
         double steps = R_0/numPeaks;
         
 //        energies[0][0] = startE;
@@ -338,7 +337,7 @@ class ProtonTherapy
             energies[i][1] = 1;    
             }else{
                 energies[i][0] = startE - i*steps;;
-                energies[i][1] = 0.3*Math.pow(i, -0.37);
+                energies[i][1] = 0.3*Math.pow(i, -0.80) + 0.1; 
             }
             System.out.println(energies[i][1]);
             System.out.println(energies[i][0]);
