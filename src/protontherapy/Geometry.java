@@ -196,25 +196,20 @@ class Geometry
                      shapes[id][2] <= z
                     // bivariate Gaussian
                      && z <= bivarGaussian(x, y));
+            
+            case 3:
+            // 3D annulus
+                // checking above inner circle
+            return ( Math.sqrt(Math.pow(shapes[id][0], 2) + Math.pow(shapes[id][1], 2)) 
+                    <= Math.pow(x, 2) + Math.pow(y, 2)
+                    && shapes[id][2] <= z
+                    
+                    // checking below outer circle
+                    && Math.pow(x, 2) + Math.pow(y, 2)
+                    <= Math.sqrt(Math.pow(shapes[id][3], 2) + Math.pow(shapes[id][4], 2)) 
+                    && z <= shapes[id][5] );
         }
-        
-//        if (type[id] == 1) {
-//            // cuboid
-//            return ( shapes[id][0] <= x
-//                     && shapes[id][1] <= y
-//                     && shapes[id][2] <= z
-//                     && x <= shapes[id][3]
-//                     && y <= shapes[id][4]
-//                     && z <= shapes[id][5] );
-//        }
-//        
-//        if (type[id] == 2) {
-//            // contoured scatter
-//            return ( // base 
-//                     shapes[id][2] <= z
-//                    // bivariate Gaussian
-//                     && z <= bivarGaussian(x, y));
-//        }
+       
         
         return false;
     }
