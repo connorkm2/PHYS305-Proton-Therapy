@@ -118,8 +118,7 @@ class Voxel
         int yBin = (int) ((p.y - binlow[1])/binwidth[1]);
         int zBin = (int) ((p.z - binlow[2])/binwidth[2]);
                 
-        zSlices[zBin][xBin][yBin] = zSlices[zBin][xBin][yBin] + energy;
-        
+        zSlices[zBin][xBin][yBin] = zSlices[zBin][xBin][yBin] + energy;      
     }
     
 //    i : selection for x,y,z
@@ -191,7 +190,7 @@ class Voxel
             return;
         }
         
-        outputFile.println("x, Energy, y, Energy, z, Energy,");
+        //outputFile.println("x, Energy, y, Energy, z, Energy");
         for(int n = 0; n < nbins; n++){
             for(int i = 0; i < 3; i++){
                 outputFile.print(binCentre[i][n] + "," + getBinEnergy(0, i, n)+",");
@@ -255,15 +254,31 @@ class Voxel
         System.out.println(filename+" written!");
     }
     
+    public void writeProfile(){
+        String filename = "dose_profile.csv";
+        PrintWriter outputFile;
+        try{
+            outputFile = new PrintWriter(filename);
+        } catch(IOException e){
+            System.err.println("Failed to open file."+filename+" Histogram data was not saved");
+            return;
+        }
+        for(int i = 0; i < nbins; i++){
+            outputFile.println(binCentre[0][i]+","+ zSlices[0][i][nbins/2]);
+        }
+        outputFile.close(); // close the output file
+        System.out.println(filename+" written!");
+    }
+    
 //    This function is called so that it makes use of the output fucntions above 
 //    makes it easier for dunping data.
     public void writeData(double depth, String filename){
-        System.out.println(plotPP);
         if(plotPP == true){
             writeToDiskPP("bragg_peaks.csv");
         }else{
             writeToDiskCombined(filename);
         }
+        writeProfile();
         writeZSlice(depth);
 
     }

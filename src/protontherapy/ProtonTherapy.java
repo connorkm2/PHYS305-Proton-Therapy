@@ -48,7 +48,7 @@ class ProtonTherapy
     // total time to track (seconds), number of time steps, use/don't use RK4
     static final double time = 1E-7;
     static final int nsteps = 100000;
-    static final boolean useRungeKutta4 = false;
+    static final boolean useRungeKutta4 = true;
 
     // minimum size of experimental features,
     // ensure this is a factor ~10 smaller than the thinest elements of the experiment
@@ -60,7 +60,7 @@ class ProtonTherapy
     static final double startAngle = 0;      // Radians
     
     // Number of events to simulate (ie. the number of particles)
-    static int numberOfEvents = 10000;
+    static int numberOfEvents = 100000;
     
     // Energy ranges for when we add multiple energy ranges to flatten dose area
     static final double [][] energies = getEnergiesNEW(200);
@@ -75,7 +75,7 @@ class ProtonTherapy
     
     public static void main (String [] args )
     {
-        System.out.println(Arrays.deepToString(getEnergiesNEW(200)));
+        System.out.println(Arrays.deepToString(getEnergiesNEW2(200)));
         // setup histograms for analysis
         Histogram hist_gen_mom = new Histogram(50, 0., 150*1.01, "initial generated Momentum");
         Histogram hist_sim_mom = new Histogram(50, 0., 150*1.01, "simulated final Momentum");
@@ -99,7 +99,10 @@ class ProtonTherapy
 //            // Added for weighting the subsequent beams
             int np = (int) Math.rint( numberOfEvents*energies[ke][1]);
 //           System.out.println(numberOfEvents);
-            System.out.println(np);
+//            System.out.println("Rabbit");
+//            System.out.println(np);
+//            System.out.println(energies[ke][0]);
+//            System.out.println(energies[ke][1]);
             
             for (int nev = 0; nev < np; nev++) {
 
@@ -219,7 +222,7 @@ class ProtonTherapy
         hist_det_theta_zx.writeToDisk("det_theta_zx.csv");
         hist_det_theta_zy.writeToDisk("det_theta_zy.csv");
         
-        Experiment.writeEnergyHist(0.65,"energy_hist.csv");
+        Experiment.writeEnergyHist(0.3,"energy_hist.csv");
 
     }
 
@@ -240,16 +243,20 @@ class ProtonTherapy
         Experiment.AddCuboid(-0.20, -0.20, 0.01,            // start x, y, z
                              0.20, 0.20, 0.02,   // end   x, y, z
                              16.65, 73, 180.94788, "Tantalum scatterer");           // density, Z, A
-                
+        
         // water phantom
         Experiment.AddCuboid(-0.20, -0.20, 0.22,            // start x, y, z
                              0.20, 0.20, 0.72,   // end   x, y, z
                              1, 7.42, 18.015, "Water phantom");           // density, Z, A
         
         // two 1mm-thin "silicon detectors" 10cm and 20cm after the iron block
-        Experiment.AddCuboid(-0.5, -0.5, 1.65, // start x, y, z
-                             0.5, 0.5, 1.66,   // end   x, y, z
+        Experiment.AddCuboid(-0.5, -0.5, 0.219, // start x, y, z
+                             0.5, 0.5, 0.22,   // end   x, y, z
                              2.33, 14, 28.085, "Si detector");                 // density, Z, A
+        
+        // Contoured Scatterer
+//        Experiment.AddContour(-0.2, -0.2, 0.05,
+//                             11.34, 82, 207.2, "Contour scatter");
        
         
         Experiment.Print();
@@ -346,6 +353,45 @@ class ProtonTherapy
         
         return energies;
         
+    }
+    
+        public static double [][] getEnergiesNEW2(double startE){
+        double p = 1.04;
+        int numPeaks = 10;
+        double R_0 = 0.0022*Math.pow(startE, p);
+        double targetWidth = R_0*0.15;
+//        System.out.println(R_0);
+//        System.out.println(targetWidth);
+//        System.out.println("dog");
+
+
+        double [][] energies = new double[numPeaks+1][2];
+
+        for(int k = 0; k < numPeaks;k++){
+            //if(k == 6){ p = 1.4; }
+            double range  = (1-((1-((double)k/(double)numPeaks))*targetWidth))*R_0;
+            energies[k][0] = Math.pow((range/0.0022), 1/p);
+            //energies[k][0] = Math.pow(((R_0-(0.06*(double)(numPeaks-k)))/0.0022),1/p);
+            //System.out.println(energies[k][0]);
+
+            if(k == 0){
+                //energies[k][1] = Math.pow((1-(1/(2*(double)numPeaks))),1-(1/p));
+                energies[k][1] = (Math.pow(1-((1/(double)numPeaks)*((double)k - 0.5)),1-(1/p))
+                        - Math.pow(1-((1/(double)numPeaks)*((double)k + 0.5)),1-(1/p)))*10;
+            }else if(k == numPeaks){
+                energies[k][1] = Math.pow((1/(2*(double)numPeaks)), 1-(1/p))*10;
+            }else{
+                energies[k][1] = (Math.pow(1-((1/(double)numPeaks)*((double)k - 0.5)),1-(1/p))
+                        - Math.pow(1-((1/(double)numPeaks)*((double)k + 0.5)),1-(1/p)))*10;
+            }
+            //System.out.println(k);
+        }
+
+        energies[numPeaks][0] = startE;
+        energies[numPeaks][1] = 0.85;
+
+        return energies;
+
     }
 
 }

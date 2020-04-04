@@ -73,7 +73,7 @@ class Geometry
         double [] binhigh = {0.2, 0.2, 0.72};
         
 //        Set last parameter to true to output individual bragg peaks        
-        energy_hist = new Voxel(400, binlow, binhigh, "Z Slices", true);
+        energy_hist = new Voxel(100, binlow, binhigh, "Z Slices", false);
         
     }
 
@@ -82,8 +82,6 @@ class Geometry
     public double bivarGaussian(double x, double y) {
         double zGauss = (1/(2*Math.PI*sigma_x*sigma_y))
                 *Math.exp(-0.5*((Math.pow(x, 2)/Math.pow(sigma_x,2))+(Math.pow(y, 2)/Math.pow(sigma_y, 2))));
-        System.out.println("hamster");
-        System.out.println(zGauss);
         return zGauss;
     }
    
@@ -128,6 +126,7 @@ class Geometry
         }
         
         type[nshapes] = 2;
+        shapes[nshapes] = new double[6];
         shapes[nshapes][0] = x0;
         shapes[nshapes][1] = y0;
         shapes[nshapes][2] = z0;
@@ -145,6 +144,34 @@ class Geometry
         
         nshapes++;
         return (nshapes-1);
+    }
+    
+    public int AddAperture(double apertureRad, double outerRad,
+                           double z0, double z1,
+                           double rhoin, double Zin, double Ain,
+                          String name){
+        if (nshapes >= maxShapes){
+            return -1;
+        }
+        
+        type[nshapes] = 2;
+        shapes[nshapes] = new double[4];
+        shapes[nshapes][0] = apertureRad;
+        shapes[nshapes][1] = outerRad;
+        shapes[nshapes][2] = z0;
+        shapes[nshapes][3] = z1;
+        
+        rho[nshapes] = rhoin;
+        Z[nshapes] = Zin;
+        A[nshapes] = Ain;
+        names[nshapes] = name;
+        
+        Eloss[nshapes] = new EnergyLoss(rhoin, Zin, Ain);
+        MultScatter[nshapes] = new MCS(rhoin, Zin, Ain);
+        
+        nshapes++;
+        
+    return (nshapes-1);    
     }
     
     public void Print()
@@ -192,22 +219,22 @@ class Geometry
                      && z <= shapes[id][5] );
             case 2:
             // contoured scatter
+                //System.out.println(bivarGaussian(x, y)/1000);
             return ( // base 
                      shapes[id][2] <= z
                     // bivariate Gaussian
-                     && z <= bivarGaussian(x, y));
+                     && z <= bivarGaussian(x, y)/1000);
             
             case 3:
             // 3D annulus
+                double particleRad = Math.sqrt(Math.pow(x, 2)+Math.pow(y, 2));
                 // checking above inner circle
-            return ( Math.sqrt(Math.pow(shapes[id][0], 2) + Math.pow(shapes[id][1], 2)) 
-                    <= Math.pow(x, 2) + Math.pow(y, 2)
+            return ( shapes[id][0] <= particleRad
                     && shapes[id][2] <= z
                     
                     // checking below outer circle
-                    && Math.pow(x, 2) + Math.pow(y, 2)
-                    <= Math.sqrt(Math.pow(shapes[id][3], 2) + Math.pow(shapes[id][4], 2)) 
-                    && z <= shapes[id][5] );
+                    && particleRad <= shapes[id][1] 
+                    && z <= shapes[id][3] );
         }
        
         
@@ -246,10 +273,10 @@ class Geometry
         if (volume >= 1) {
             double lostE = Eloss[volume].getEnergyLoss(p)*dist;
             p.reduceEnergy(lostE);
+            //System.out.println(p.momentum());
             if(isInVolume(p, 2)){
-//                System.out.println("Dog");
-//                System.out.println(lostE);
-//                System.out.println(p.z);
+//               System.out.println("Dog");
+//               System.out.println(lostE);
 //                double stdev = 0.1;
 //                double smearing = randGen.nextGaussian()*stdev;
                 energy_hist.fill(lostE, p, beamWeight);
@@ -273,10 +300,12 @@ class Geometry
         }
         
         double theta0 = MultScatter[volume].getTheta0(p, dist);
+        //System.out.println(theta0);
 
         if (Math.abs(theta0) > 0.) {
             p.applySmallRotation(randGen.nextGaussian()*theta0,
                                  randGen.nextGaussian()*theta0);
+            
         }
         
     }
