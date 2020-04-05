@@ -264,7 +264,11 @@ class Voxel
             return;
         }
         for(int i = 0; i < nbins; i++){
-            outputFile.println(binCentre[0][i]+","+ zSlices[0][i][nbins/2]);
+            double value = 0;
+            for(int a = 0; a < nbins; a++){
+                value = value + zSlices[a][i][nbins/2];
+            }
+            outputFile.println(binCentre[0][i]+","+ value);            
         }
         outputFile.close(); // close the output file
         System.out.println(filename+" written!");
