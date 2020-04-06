@@ -35,8 +35,8 @@ class Geometry
     private double [] A;
     private String [] names;
     
-    private double sigma_x = 0.05;
-    private double sigma_y = 0.05;
+    private double sigma_x = 2;
+    private double sigma_y = 2;
 
     private double [][] shapes;
     
@@ -223,7 +223,7 @@ class Geometry
             return ( // base 
                      shapes[id][2] <= z
                     // bivariate Gaussian
-                     && z <= bivarGaussian(x, y)/1000);
+                     && z <= (bivarGaussian(x, y)+shapes[id][2]));
             
             case 3:
             // 3D annulus

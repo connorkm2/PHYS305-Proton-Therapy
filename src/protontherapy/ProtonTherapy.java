@@ -60,7 +60,7 @@ class ProtonTherapy
     static final double startAngle = 0;      // Radians
     
     // Number of events to simulate (ie. the number of particles)
-    static int numberOfEvents = 100000;
+    static int numberOfEvents = 1000;
     
     // Energy ranges for when we add multiple energy ranges to flatten dose area
     static final double [][] energies = getEnergiesNEW(200);
@@ -75,7 +75,7 @@ class ProtonTherapy
     
     public static void main (String [] args )
     {
-        System.out.println(Arrays.deepToString(getEnergiesNEW2(200)));
+        System.out.println(Arrays.deepToString(getEnergiesNEW(200)));
         // setup histograms for analysis
         Histogram hist_gen_mom = new Histogram(50, 0., 150*1.01, "initial generated Momentum");
         Histogram hist_sim_mom = new Histogram(50, 0., 150*1.01, "simulated final Momentum");
@@ -100,7 +100,7 @@ class ProtonTherapy
             int np = (int) Math.rint( numberOfEvents*energies[ke][1]);
 //           System.out.println(numberOfEvents);
 //            System.out.println("Rabbit");
-//            System.out.println(np);
+            System.out.println(np);
 //            System.out.println(energies[ke][0]);
 //            System.out.println(energies[ke][1]);
             
@@ -136,7 +136,7 @@ class ProtonTherapy
 
                     // write scatter plot for event 0, particle 0 to disk into file "output_particle.csv"
                     if (nev == 0 && ip == 0) {
-                        Tracks_sim[ip].writeToDisk("output_particle.csv");
+                        //Tracks_sim[ip].writeToDisk("output_particle.csv");
                     }
                 }
                 // end of simulated particle propagation
@@ -255,8 +255,8 @@ class ProtonTherapy
                              2.33, 14, 28.085, "Si detector");                 // density, Z, A
         
          //Contoured Scatterer
-//        Experiment.AddContour(-0.2, -0.2, 0.05,
-//                             11.34, 82, 207.2, "Contour scatter");
+        Experiment.AddContour(-0.2, -0.2, 0.05,
+                             11.34, 82, 207.2, "Contour scatter");
        
         
         Experiment.Print();
@@ -297,7 +297,7 @@ class ProtonTherapy
         // initial position (x,y,z) = (0,0,0)
         Particles_gen[0].x = 0;
         Particles_gen[0].y = 0;
-        Particles_gen[0].z = randValue;
+        Particles_gen[0].z = 0;//randValue;
 
         return Particles_gen;
     }
@@ -344,11 +344,12 @@ class ProtonTherapy
             energies[i][1] = 1;    
             }else{
                 energies[i][0] = startE - i*steps;;
-                energies[i][1] = 0.3*Math.pow(i, -0.80) + 0.1; 
+                energies[i][1] = 0.3*Math.pow(i, -0.80) + 0.1;
+                //energies[i][1] = 0.4*Math.pow(i, -0.50) ;//+ 0.1;
             }
-            System.out.println(energies[i][1]);
-            System.out.println(energies[i][0]);
-            System.out.println("dog");
+//            System.out.println(energies[i][1]);
+//            System.out.println(energies[i][0]);
+//            System.out.println("dog");
         }
         
         return energies;
@@ -375,9 +376,9 @@ class ProtonTherapy
             //System.out.println(energies[k][0]);
 
             if(k == 0){
-                //energies[k][1] = Math.pow((1-(1/(2*(double)numPeaks))),1-(1/p));
-                energies[k][1] = (Math.pow(1-((1/(double)numPeaks)*((double)k - 0.5)),1-(1/p))
-                        - Math.pow(1-((1/(double)numPeaks)*((double)k + 0.5)),1-(1/p)))*10;
+                energies[k][1] = Math.pow((1-(1/(2*(double)numPeaks))),1-(1/p));
+//                energies[k][1] = (Math.pow(1-((1/(double)numPeaks)*((double)k - 0.5)),1-(1/p))
+//                        - Math.pow(1-((1/(double)numPeaks)*((double)k + 0.5)),1-(1/p)))*10;
             }else if(k == numPeaks){
                 energies[k][1] = Math.pow((1/(2*(double)numPeaks)), 1-(1/p))*10;
             }else{
