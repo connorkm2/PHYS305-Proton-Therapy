@@ -257,6 +257,10 @@ class ProtonTherapy
          //Contoured Scatterer
         Experiment.AddContour(-0.2, -0.2, 0.05,
                              11.34, 82, 207.2, "Contour scatter");
+        
+        //Aperture
+        Experiment.AddAperture(0.03, 0.2, 0.2, 0.21,
+                               11.34, 82, 207.2, "Aperture");
        
         
         Experiment.Print();
