@@ -121,6 +121,40 @@ class Voxel
         zSlices[zBin][xBin][yBin] = zSlices[zBin][xBin][yBin] + energy;      
     }
     
+    public double [][] getAbsorbedDose(double [][][] zSlices, 
+                                    double x0, double y0, double z0,
+                                    double x1, double y1, double z1, 
+                                    double rhoin) {
+        // initialising energy slice array
+        double [][] total_energy = new double [nbins][2];
+        // calculates volume of each voxel
+        double voxelVolume = (x1 - x0)/nbins * (y1 - y0)/nbins * (z1 - z0)/nbins;
+        // calculates voxel mass
+        double voxelMass = rhoin*voxelVolume;
+        // initialises absorbed dose array
+        double [][] AbsorbedDose = new double [nbins][2];
+        
+        // for z slices
+        for (int i = 0; i < nbins; i++){
+            // for voxels in x
+            for (int j = 0; j < nbins; j++) {
+            // for voxels in y
+                for (int k = 0; k < nbins; k++) {
+                // summing x and y energy deposited in each z slice
+                total_energy[i][0] += zSlices[i][j][k];
+                }
+                }
+            AbsorbedDose[i][0] = total_energy[i][0]/(voxelMass*Math.pow(nbins, 2));
+            
+            }
+        System.out.println("horse");
+        System.out.println(AbsorbedDose);
+        return AbsorbedDose;
+        }   
+    
+    double [][] absorbed_dose = getAbsorbedDose(zSlices, -0.20, -0.20, 0.22,            // start x, y, z
+                             0.20, 0.20, 0.72, 1);
+    
 //    i : selection for x,y,z
 //    int ke: position value of energy of current itteration in main of ProtonTherapy.
     public double getBinEnergy(int ke, int i, int nbin)
