@@ -254,6 +254,7 @@ class Geometry
         // cycle through volumes in opposite order
         for (int i = getNshapes()-1; i >= 0; i--) {
             if (isInVolume(x, y, z, i)) {
+//                System.out.println(i);
                 return i;
             }
         }
@@ -271,7 +272,7 @@ class Geometry
     public int getVolume(Particle p)
     {
         // get the highest volume number the particle is in
-        return getVolume(p.x, p.x, p.z);
+        return getVolume(p.x, p.y, p.z);
     }
     
     public void doEloss(Particle p, double dist, int beamWeight)

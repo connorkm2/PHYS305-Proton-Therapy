@@ -254,9 +254,9 @@ class ProtonTherapy
                              0.5, 0.5, 0.22,   // end   x, y, z
                              2.33, 14, 28.085, "Si detector");                 // density, Z, A
         
-         //Contoured Scatterer
-        Experiment.AddContour(-0.2, -0.2, 0.05,
-                             11.34, 82, 207.2, "Contour scatter");
+//         //Contoured Scatterer
+//        Experiment.AddContour(-0.2, -0.2, 0.05,
+//                             11.34, 82, 207.2, "Contour scatter");
         
         //Aperture
         Experiment.AddAperture(0.03, 0.2, 0.2, 0.21,
