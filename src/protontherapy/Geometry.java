@@ -35,8 +35,8 @@ class Geometry
     private double [] A;
     private String [] names;
     
-    private double sigma_x = 0.05;
-    private double sigma_y = 0.05;
+    private double BivGaussSigma = 7;
+    private double BivGaussScale = 80;
 
     private double [][] shapes;
     
@@ -80,9 +80,10 @@ class Geometry
     public int getNshapes() { return nshapes; }
     
     public double bivarGaussian(double x, double y) {
-        double zGauss = (1/(2*Math.PI*sigma_x*sigma_y))
-                *Math.exp(-0.5*((Math.pow(x, 2)/Math.pow(sigma_x,2))+(Math.pow(y, 2)/Math.pow(sigma_y, 2))));
-        return zGauss;
+        double zGauss = (1/(2*Math.PI*BivGaussSigma*BivGaussSigma))
+                *Math.exp(-0.5*((Math.pow(x*BivGaussScale, 2)/Math.pow(BivGaussSigma,2))+(Math.pow(y*BivGaussScale, 2)/Math.pow(BivGaussSigma, 2))));
+        //System.out.println(zGauss);
+        return zGauss*5;
     }
    
 
@@ -154,12 +155,13 @@ class Geometry
             return -1;
         }
         
-        type[nshapes] = 2;
+        type[nshapes] = 3;
         shapes[nshapes] = new double[4];
         shapes[nshapes][0] = apertureRad;
         shapes[nshapes][1] = outerRad;
         shapes[nshapes][2] = z0;
         shapes[nshapes][3] = z1;
+
         
         rho[nshapes] = rhoin;
         Z[nshapes] = Zin;
@@ -193,6 +195,11 @@ class Geometry
                                   shapes[i][0], shapes[i][1], shapes[i][2],
                                   shapes[i][3], shapes[i][4], shapes[i][5]);
             }
+             if (type[i] == 3) {
+                System.out.println("Geometry object #" + i + " = Aperture.("+names[i]+".)");
+                System.out.printf("   corners (%f, %f, %f) ",
+                                  shapes[i][0], shapes[i][1], shapes[i][2]);
+            }
             System.out.printf("   material rho = %.3f g/cm^3, Z = %f, A = %f%n",
                               rho[i], Z[i], A[i]);
         }
@@ -219,15 +226,16 @@ class Geometry
                      && z <= shapes[id][5] );
             case 2:
             // contoured scatter
-                //System.out.println(bivarGaussian(x, y)/1000);
+                //System.out.println(bivarGaussian(x, y)+shapes[id][2]);
             return ( // base 
                      shapes[id][2] <= z
                     // bivariate Gaussian
-                     && z <= bivarGaussian(x, y)/1000);
+                     && z <= ((bivarGaussian(x, y))+shapes[id][2]));
             
             case 3:
             // 3D annulus
                 double particleRad = Math.sqrt(Math.pow(x, 2)+Math.pow(y, 2));
+                //System.out.println(particleRad);
                 // checking above inner circle
             return ( shapes[id][0] <= particleRad
                     && shapes[id][2] <= z
@@ -246,6 +254,7 @@ class Geometry
         // cycle through volumes in opposite order
         for (int i = getNshapes()-1; i >= 0; i--) {
             if (isInVolume(x, y, z, i)) {
+//                System.out.println(i);
                 return i;
             }
         }
@@ -263,12 +272,13 @@ class Geometry
     public int getVolume(Particle p)
     {
         // get the highest volume number the particle is in
-        return getVolume(p.x, p.x, p.z);
+        return getVolume(p.x, p.y, p.z);
     }
     
     public void doEloss(Particle p, double dist, int beamWeight)
     {
         int volume = getVolume(p);
+
         
         if (volume >= 1) {
             double lostE = Eloss[volume].getEnergyLoss(p)*dist;

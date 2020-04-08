@@ -113,12 +113,12 @@ class Histogram
 
         // Write the file as a comma seperated file (.csv) so it can be read it into EXCEL
         // first some general information about the histogram
-        outputFile.println("histname, " + histname);
-        outputFile.println("binlow, " + binlow);
-        outputFile.println("binwidth, " + binwidth);
-        outputFile.println("nbins, " + nbins);
-        outputFile.println("underflow, " + underflow);
-        outputFile.println("overflow, " + overflow);
+//        outputFile.println("histname, " + histname);
+//        outputFile.println("binlow, " + binlow);
+//        outputFile.println("binwidth, " + binwidth);
+//        outputFile.println("nbins, " + nbins);
+//        outputFile.println("underflow, " + underflow);
+//        outputFile.println("overflow, " + overflow);
 
         // now make a loop to write the contents of each bin to disk, one number at a time
         // together with the x-coordinate of the centre of each bin.

@@ -13,8 +13,6 @@
 import os
 import matplotlib.pyplot as plt
 import numpy as np
-
-# This just steps back two directories. Can be removed if this script is in the same directory as the csv files
 os.chdir("../")
 
 data = np.genfromtxt("15_zSlice.csv", delimiter=",")
@@ -42,5 +40,12 @@ plt.figure(3)
 plt.title("Dose Profile")
 plt.plot(data[:, 0], data[:, 1])
 plt.ylabel("Energy")
+
+# Detector
+data = np.genfromtxt("det_theta_zx.csv", delimiter=",")
+plt.figure(4)
+plt.title("Detector angles")
+plt.plot(data[:, 1], data[:, 2])
+plt.xlabel("Theta")
 
 plt.show()
