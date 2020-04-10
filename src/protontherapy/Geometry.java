@@ -43,7 +43,7 @@ class Geometry
     private EnergyLoss [] Eloss;
     private MCS [] MultScatter;
     
-    private Voxel energy_hist;
+    private Voxel voxels;
 
     private double minfeaturesize;
     
@@ -73,7 +73,7 @@ class Geometry
         double [] binhigh = {0.2, 0.2, 0.72};
         
 //        Set last parameter to true to output individual bragg peaks        
-        energy_hist = new Voxel(100, binlow, binhigh, "Z Slices", false);
+        voxels = new Voxel(100, binlow, binhigh, "Z Slices", false);
         
     }
 
@@ -279,7 +279,6 @@ class Geometry
     {
         int volume = getVolume(p);
 
-        
         if (volume >= 1) {
             double lostE = Eloss[volume].getEnergyLoss(p)*dist;
             p.reduceEnergy(lostE);
@@ -289,15 +288,15 @@ class Geometry
 //               System.out.println(lostE);
 //                double stdev = 0.1;
 //                double smearing = randGen.nextGaussian()*stdev;
-                energy_hist.fill(lostE, p, beamWeight);
+                voxels.fill(lostE, p, beamWeight);
 
             }
         }
     }
  
     public void writeEnergyHist(double depth, String filename){
-        //energy_hist.writeToDisk(filename);
-        energy_hist.writeData(depth, filename);
+        //voxels.writeToDisk(filename);
+        voxels.writeData(depth, filename);
     }
     
     public void doMultScatter(Particle p, double dist)

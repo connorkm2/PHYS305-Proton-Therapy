@@ -6,43 +6,9 @@ import java.util.Random;
 
 class ProtonTherapy
 {
-    // Program to run a simulation of particles in a "experiment"
-
-    // The program makes use of the class Particle (almost identical to the one used in week 4)
-    // to store the components of the position fourvector (time, x, y, z)
-    // and the four-momentum (technically stored as mass and px, py, pz)
-
-    // The particle tracking is performed by the class ParticleTracker,
-    // which is almost identical to the class used in week 4, however it is extended
-    // to incorporate energy loss, multiple scattering
-    // and a simple adaptive algorithm to ensure that single steps end approximately
-    // at boundaries betwen different experimental features
     
-    // The "experimental geometry" is defined in the class Geometry:
-    //    * An experiment is a collection of "volumes", that are numbered with a unique
-    //      identifier from 0 to the number of experimental features.
-    //    * Currently all experiemntal features are cuboids of different sizes and materials,
-    //      with the sides aligned to the coordinate system axes. The example is a block of iron
-    //      (user-definable length) + two "planar detectors"
-    //    * Internally to the "Geometry" class are two helper classes that implement the
-    //      formulas for calculation of energy loss (class "Energy loss")
-    //      and multiple scattering angles (class "MCS")
-    //    * The main functionality is to check, if a certain particle is inside a certain volume
-    //      and apply energy loss and multiple scattering during simulation
-    //    * The class also provides a simple mechanism to detect changes in the volume as
-    //      the particle propagates and suggest an adapted step length to keep one step within
-    //      one volume (the granularity of this scan is adjusted with "minfeaturesize")
-    //    * At the end, the class is used to "detect" particle signals in certain volumes (detectors)
-    //
-    //
-    // At the end of the simulation of each event, one may analyse the
-    // results and fill histograms. Examples are provided to perform calculations using the:
-    //    * Generated particles (Particles_gen)
-    //    * Simulated particles (Particles_sim) - these include the effect of energy loss and
-    //      multiple scattering
-    //    * Detector response (Particles_det) - these provide measurement points that can be
-    //      further used to reconstruct particles like in a real experiment, where
-    //      Particles_gen and Particles_sim are unknown
+    /*  PARAMTERS  */
+    static final double tumourDepth = 6; // cm
 
     // parameters used for the ParticleTracker
     // total time to track (seconds), number of time steps, use/don't use RK4
@@ -254,9 +220,9 @@ class ProtonTherapy
                              0.5, 0.5, 0.22,   // end   x, y, z
                              2.33, 14, 28.085, "Si detector");                 // density, Z, A
         
-//         //Contoured Scatterer
-//        Experiment.AddContour(-0.2, -0.2, 0.05,
-//                             11.34, 82, 207.2, "Contour scatter");
+         //Contoured Scatterer
+        Experiment.AddContour(-0.2, -0.2, 0.05,
+                             11.34, 82, 207.2, "Contour scatter");
         
         //Aperture
         Experiment.AddAperture(0.03, 0.2, 0.2, 0.21,
@@ -330,7 +296,7 @@ class ProtonTherapy
 //    but it is based on the paramters from the book.
     
     public static double[][] getEnergiesNEW(double startE){
-        int numPeaks = 25;
+        int numPeaks = 16;
         
         double R_0 = (0.0022*Math.pow(startE, 1.8)); // cm
         // coluumn 1 stores energies, column 2 stores weights 
@@ -344,10 +310,10 @@ class ProtonTherapy
             //double nextEnergy = Math.pow(((R_0-(0.6*i))/0.0022),1/1.8);
             //System.out.println(i);
             if(i==0){
-            energies[i][0] = startE - i*steps;;
+            energies[i][0] = startE - i*steps;
             energies[i][1] = 1;    
             }else{
-                energies[i][0] = startE - i*steps;;
+                energies[i][0] = startE - i*steps;
                 energies[i][1] = 0.3*Math.pow(i, -0.80) + 0.1;
                 //energies[i][1] = 0.4*Math.pow(i, -0.50) ;//+ 0.1;
             }
@@ -356,6 +322,8 @@ class ProtonTherapy
 //            System.out.println("dog");
         }
         
+        double tumourDepth = R_0 - (0.0022*Math.pow(energies[numPeaks-1][0], 1.8));
+        System.out.println("Depth of tumour: "+tumourDepth);
         return energies;
         
     }
