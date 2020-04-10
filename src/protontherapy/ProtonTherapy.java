@@ -29,7 +29,7 @@ class ProtonTherapy
     static int numberOfEvents = 1000;
     
     // Energy ranges for when we add multiple energy ranges to flatten dose area
-    static final double [][] energies = getEnergiesNEW(200);
+    static final double [][] energies = getEnergiesNEW(250);
     
     static final double delta = 0.2; // for det hists
     static final double delta_A = 0.05; //For first 4 hists gen and sim theta
@@ -224,9 +224,9 @@ class ProtonTherapy
         Experiment.AddContour(-0.2, -0.2, 0.05,
                              11.34, 82, 207.2, "Contour scatter");
         
-        //Aperture
-        Experiment.AddAperture(0.03, 0.2, 0.2, 0.21,
-                               11.34, 82, 207.2, "Aperture");
+//        //Aperture
+//        Experiment.AddAperture(0.03, 0.2, 0.2, 0.21,
+//                               11.34, 82, 207.2, "Aperture");
        
         
         Experiment.Print();

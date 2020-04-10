@@ -73,7 +73,7 @@ class Geometry
         double [] binhigh = {0.2, 0.2, 0.72};
         
 //        Set last parameter to true to output individual bragg peaks        
-        voxels = new Voxel(100, binlow, binhigh, "Z Slices", false);
+        voxels = new Voxel(100, binlow, binhigh, "Z Slices", true);
         
     }
 
@@ -284,6 +284,7 @@ class Geometry
             p.reduceEnergy(lostE);
             //System.out.println(p.momentum());
             if(isInVolume(p, 2)){
+                if(isInVolume(p, 4)){System.out.println("1");}
 //               System.out.println("Dog");
 //               System.out.println(lostE);
 //                double stdev = 0.1;
