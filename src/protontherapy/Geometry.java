@@ -35,15 +35,15 @@ class Geometry
     private double [] A;
     private String [] names;
     
-    private double BivGaussSigma = 7;
-    private double BivGaussScale = 80;
+    private double BivGaussSigma = 6;
+    private double BivGaussScale = 60;
 
     private double [][] shapes;
     
     private EnergyLoss [] Eloss;
     private MCS [] MultScatter;
     
-    private Voxel energy_hist;
+    private Voxel voxels;
 
     private double minfeaturesize;
     
@@ -73,7 +73,7 @@ class Geometry
         double [] binhigh = {0.2, 0.2, 0.72};
         
 //        Set last parameter to true to output individual bragg peaks        
-        energy_hist = new Voxel(100, binlow, binhigh, "Z Slices", false);
+        voxels = new Voxel(100, binlow, binhigh, "Z Slices", true);
         
     }
 
@@ -87,8 +87,7 @@ class Geometry
     }
    
 
-    public int AddCuboid(double x0, double y0, double z0,
-                         double x1, double y1, double z1,
+    public int AddCuboid(double[] pos,
                          double rhoin, double Zin, double Ain,
                          String name)
     {
@@ -98,12 +97,12 @@ class Geometry
         
         type[nshapes] = 1;
         shapes[nshapes] = new double[6];
-        shapes[nshapes][0] = x0;
-        shapes[nshapes][1] = y0;
-        shapes[nshapes][2] = z0;
-        shapes[nshapes][3] = x1;
-        shapes[nshapes][4] = y1;
-        shapes[nshapes][5] = z1;
+        shapes[nshapes][0] = pos[0];    // x0
+        shapes[nshapes][1] = pos[1];    // y0    
+        shapes[nshapes][2] = pos[2];    // z0
+        shapes[nshapes][3] = pos[3];    // x1
+        shapes[nshapes][4] = pos[4];    // y1
+        shapes[nshapes][5] = pos[5];    // z1
 
         rho[nshapes] = rhoin;
         Z[nshapes] = Zin;
@@ -279,25 +278,25 @@ class Geometry
     {
         int volume = getVolume(p);
 
-        
         if (volume >= 1) {
             double lostE = Eloss[volume].getEnergyLoss(p)*dist;
             p.reduceEnergy(lostE);
             //System.out.println(p.momentum());
             if(isInVolume(p, 2)){
+                if(isInVolume(p, 4)){System.out.println("1");}
 //               System.out.println("Dog");
 //               System.out.println(lostE);
 //                double stdev = 0.1;
 //                double smearing = randGen.nextGaussian()*stdev;
-                energy_hist.fill(lostE, p, beamWeight);
+                voxels.fill(lostE, p, beamWeight);
 
             }
         }
     }
  
     public void writeEnergyHist(double depth, String filename){
-        //energy_hist.writeToDisk(filename);
-        energy_hist.writeData(depth, filename);
+        //voxels.writeToDisk(filename);
+        voxels.writeData(depth, filename);
     }
     
     public void doMultScatter(Particle p, double dist)

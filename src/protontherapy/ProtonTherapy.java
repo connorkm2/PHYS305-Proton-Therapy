@@ -4,45 +4,11 @@ import static java.lang.Math.sin;
 import java.util.Arrays;
 import java.util.Random;
 
-class ProtonTherapy
+class ProtonTherapy extends Parameters
 {
-    // Program to run a simulation of particles in a "experiment"
-
-    // The program makes use of the class Particle (almost identical to the one used in week 4)
-    // to store the components of the position fourvector (time, x, y, z)
-    // and the four-momentum (technically stored as mass and px, py, pz)
-
-    // The particle tracking is performed by the class ParticleTracker,
-    // which is almost identical to the class used in week 4, however it is extended
-    // to incorporate energy loss, multiple scattering
-    // and a simple adaptive algorithm to ensure that single steps end approximately
-    // at boundaries betwen different experimental features
     
-    // The "experimental geometry" is defined in the class Geometry:
-    //    * An experiment is a collection of "volumes", that are numbered with a unique
-    //      identifier from 0 to the number of experimental features.
-    //    * Currently all experiemntal features are cuboids of different sizes and materials,
-    //      with the sides aligned to the coordinate system axes. The example is a block of iron
-    //      (user-definable length) + two "planar detectors"
-    //    * Internally to the "Geometry" class are two helper classes that implement the
-    //      formulas for calculation of energy loss (class "Energy loss")
-    //      and multiple scattering angles (class "MCS")
-    //    * The main functionality is to check, if a certain particle is inside a certain volume
-    //      and apply energy loss and multiple scattering during simulation
-    //    * The class also provides a simple mechanism to detect changes in the volume as
-    //      the particle propagates and suggest an adapted step length to keep one step within
-    //      one volume (the granularity of this scan is adjusted with "minfeaturesize")
-    //    * At the end, the class is used to "detect" particle signals in certain volumes (detectors)
-    //
-    //
-    // At the end of the simulation of each event, one may analyse the
-    // results and fill histograms. Examples are provided to perform calculations using the:
-    //    * Generated particles (Particles_gen)
-    //    * Simulated particles (Particles_sim) - these include the effect of energy loss and
-    //      multiple scattering
-    //    * Detector response (Particles_det) - these provide measurement points that can be
-    //      further used to reconstruct particles like in a real experiment, where
-    //      Particles_gen and Particles_sim are unknown
+    /*  PARAMTERS  */
+    static final double tumourDepth = 6; // cm
 
     // parameters used for the ParticleTracker
     // total time to track (seconds), number of time steps, use/don't use RK4
@@ -60,10 +26,10 @@ class ProtonTherapy
     static final double startAngle = 0;      // Radians
     
     // Number of events to simulate (ie. the number of particles)
-    static int numberOfEvents = 1000;
+    static int numberOfEvents = 10000;
     
     // Energy ranges for when we add multiple energy ranges to flatten dose area
-    static final double [][] energies = getEnergiesNEW(200);
+    static final double [][] energies = getEnergiesNEW(250);
     
     static final double delta = 0.2; // for det hists
     static final double delta_A = 0.05; //For first 4 hists gen and sim theta
@@ -233,34 +199,32 @@ class ProtonTherapy
         Geometry Experiment = new Geometry(minfeaturesize);
         
         // this line defines the size of the experiment in vacuum
-        Experiment.AddCuboid(-0.5, -0.5, 0.,                // start x, y, z
-
-                             0.5, 0.5, 1.5,  // end   x, y, z
-
+        double[] pos1 =      {-0.5, -0.5, 0.,                // start x, y, z
+                             0.5, 0.5, 1.5};  // end   x, y, z
+        Experiment.AddCuboid(pos1,
                              0., 0., 0., "Vacuum");                     // zeros for "vacuum"
 
         // Block of tantalum of thickness 1cm
-        Experiment.AddCuboid(-0.20, -0.20, 0.01,            // start x, y, z
-                             0.20, 0.20, 0.02,   // end   x, y, z
+        Experiment.AddCuboid(scatererPosition,   // end   x, y, z
                              16.65, 73, 180.94788, "Tantalum scatterer");           // density, Z, A
         
         // water phantom
-        Experiment.AddCuboid(-0.20, -0.20, 0.22,            // start x, y, z
-                             0.20, 0.20, 0.72,   // end   x, y, z
+        Experiment.AddCuboid(phantomPosition,   // end   x, y, z
                              1, 7.42, 18.015, "Water phantom");           // density, Z, A
         
         // two 1mm-thin "silicon detectors" 10cm and 20cm after the iron block
-        Experiment.AddCuboid(-0.5, -0.5, 0.219, // start x, y, z
-                             0.5, 0.5, 0.22,   // end   x, y, z
+        double[] pos2 =      {-0.5, -0.5, 0.219, // start x, y, z
+                             0.5, 0.5, 0.22};   // end   x, y, z
+        Experiment.AddCuboid(pos2,
                              2.33, 14, 28.085, "Si detector");                 // density, Z, A
         
-//         //Contoured Scatterer
-//        Experiment.AddContour(-0.2, -0.2, 0.05,
-//                             11.34, 82, 207.2, "Contour scatter");
+         //Contoured Scatterer
+        Experiment.AddContour(-0.2, -0.2, 0.05,
+                             16.65, 73, 180.94788, "Contour scatter");
         
-        //Aperture
-        Experiment.AddAperture(0.03, 0.2, 0.2, 0.21,
-                               11.34, 82, 207.2, "Aperture");
+//        //Aperture
+//        Experiment.AddAperture(0.03, 0.2, 0.2, 0.21,
+//                               11.34, 82, 207.2, "Aperture");
        
         
         Experiment.Print();
@@ -296,11 +260,11 @@ class ProtonTherapy
         Particles_gen[0].m = 938;
         Particles_gen[0].Q = +1;  
 
-        double randValue = (-0.2)*(0.2+0.2) * randGen.nextDouble();
+        double randValue = (-0.05)*(0.05+0.05) * randGen.nextGaussian();
 
         // initial position (x,y,z) = (0,0,0)
-        Particles_gen[0].x = 0;
-        Particles_gen[0].y = 0;
+        Particles_gen[0].x = randValue;
+        Particles_gen[0].y = randValue;
         Particles_gen[0].z = 0;//randValue;
 
         return Particles_gen;
@@ -330,7 +294,7 @@ class ProtonTherapy
 //    but it is based on the paramters from the book.
     
     public static double[][] getEnergiesNEW(double startE){
-        int numPeaks = 25;
+        int numPeaks = 16;
         
         double R_0 = (0.0022*Math.pow(startE, 1.8)); // cm
         // coluumn 1 stores energies, column 2 stores weights 
@@ -344,10 +308,10 @@ class ProtonTherapy
             //double nextEnergy = Math.pow(((R_0-(0.6*i))/0.0022),1/1.8);
             //System.out.println(i);
             if(i==0){
-            energies[i][0] = startE - i*steps;;
+            energies[i][0] = startE - i*steps;
             energies[i][1] = 1;    
             }else{
-                energies[i][0] = startE - i*steps;;
+                energies[i][0] = startE - i*steps;
                 energies[i][1] = 0.3*Math.pow(i, -0.80) + 0.1;
                 //energies[i][1] = 0.4*Math.pow(i, -0.50) ;//+ 0.1;
             }
@@ -356,6 +320,8 @@ class ProtonTherapy
 //            System.out.println("dog");
         }
         
+        double tumourDepth = R_0 - (0.0022*Math.pow(energies[numPeaks-1][0], 1.8));
+        System.out.println("Depth of tumour: "+tumourDepth);
         return energies;
         
     }
