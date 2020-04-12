@@ -4,7 +4,7 @@ import static java.lang.Math.sin;
 import java.util.Arrays;
 import java.util.Random;
 
-class ProtonTherapy
+class ProtonTherapy extends Parameters
 {
     
     /*  PARAMTERS  */
@@ -26,7 +26,7 @@ class ProtonTherapy
     static final double startAngle = 0;      // Radians
     
     // Number of events to simulate (ie. the number of particles)
-    static int numberOfEvents = 1000;
+    static int numberOfEvents = 10000;
     
     // Energy ranges for when we add multiple energy ranges to flatten dose area
     static final double [][] energies = getEnergiesNEW(250);
@@ -199,30 +199,28 @@ class ProtonTherapy
         Geometry Experiment = new Geometry(minfeaturesize);
         
         // this line defines the size of the experiment in vacuum
-        Experiment.AddCuboid(-0.5, -0.5, 0.,                // start x, y, z
-
-                             0.5, 0.5, 1.5,  // end   x, y, z
-
+        double[] pos1 =      {-0.5, -0.5, 0.,                // start x, y, z
+                             0.5, 0.5, 1.5};  // end   x, y, z
+        Experiment.AddCuboid(pos1,
                              0., 0., 0., "Vacuum");                     // zeros for "vacuum"
 
         // Block of tantalum of thickness 1cm
-        Experiment.AddCuboid(-0.20, -0.20, 0.01,            // start x, y, z
-                             0.20, 0.20, 0.02,   // end   x, y, z
+        Experiment.AddCuboid(scatererPosition,   // end   x, y, z
                              16.65, 73, 180.94788, "Tantalum scatterer");           // density, Z, A
         
         // water phantom
-        Experiment.AddCuboid(-0.20, -0.20, 0.22,            // start x, y, z
-                             0.20, 0.20, 0.72,   // end   x, y, z
+        Experiment.AddCuboid(phantomPosition,   // end   x, y, z
                              1, 7.42, 18.015, "Water phantom");           // density, Z, A
         
         // two 1mm-thin "silicon detectors" 10cm and 20cm after the iron block
-        Experiment.AddCuboid(-0.5, -0.5, 0.219, // start x, y, z
-                             0.5, 0.5, 0.22,   // end   x, y, z
+        double[] pos2 =      {-0.5, -0.5, 0.219, // start x, y, z
+                             0.5, 0.5, 0.22};   // end   x, y, z
+        Experiment.AddCuboid(pos2,
                              2.33, 14, 28.085, "Si detector");                 // density, Z, A
         
          //Contoured Scatterer
         Experiment.AddContour(-0.2, -0.2, 0.05,
-                             11.34, 82, 207.2, "Contour scatter");
+                             16.65, 73, 180.94788, "Contour scatter");
         
 //        //Aperture
 //        Experiment.AddAperture(0.03, 0.2, 0.2, 0.21,
@@ -262,11 +260,11 @@ class ProtonTherapy
         Particles_gen[0].m = 938;
         Particles_gen[0].Q = +1;  
 
-        double randValue = (-0.2)*(0.2+0.2) * randGen.nextDouble();
+        double randValue = (-0.05)*(0.05+0.05) * randGen.nextGaussian();
 
         // initial position (x,y,z) = (0,0,0)
-        Particles_gen[0].x = 0;
-        Particles_gen[0].y = 0;
+        Particles_gen[0].x = randValue;
+        Particles_gen[0].y = randValue;
         Particles_gen[0].z = 0;//randValue;
 
         return Particles_gen;

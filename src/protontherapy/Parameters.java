@@ -13,10 +13,19 @@ package protontherapy;
 // class to input SOBP parameters, as well as calculate NTCP and TCP
 public class Parameters {
     
+    public static double tumourDepthInPatient = 7; // cm // depth to center of tumour
+    public static double[] tumourDimensions = {3,3,14}; //w,h,d [cm]
+    
+    public static final double[] phantomPosition = {-0.2, -0.2, 0.22,    //x0,y0,z0 [m]
+                                               0.2, 0.2, 0.72};     //x1,y1,z1 [m]
+    public static final double[] scatererPosition = {-0.20, -0.20, 0.01,    //x0,y0,z0 [m]
+                                                    0.20, 0.20, 0.02};   //x1,y1,z1 [m]
+    
+    
 //NTCP [Normal Tissue Complications Probability] and TCP [Tumour Control Probability] calculation method
 
 // IS ABSORBED DOSE 2D OR 1D 
-
+/*
 public double getTCP(double nbins, double voxelVolume, double [][] absorbed_dose) {
 	// voxels in ith dose bin
 	double m_i = Math.pow(nbins, 2);
@@ -79,6 +88,47 @@ public double getNTCP(double n, double [][] absorbed_dose, double m_i, double nb
 	double NTCP = 100 * Math.pow((1 - term_1), (1/s));
 	
 	return NTCP;
-}
+}*/
+
+    
+    public double getTumourZ0(){
+        double z0 = ((phantomPosition[2]*100)+tumourDepthInPatient)-(tumourDimensions[2]/2);
+        System.out.println("z0 = "+z0/100);
+        return z0/100;
+    }
+    
+    public double getTumourZ1(){
+        double z1 = ((phantomPosition[2]*100)+tumourDepthInPatient)+(tumourDimensions[2]/2);
+        System.out.println("z1 = "+z1/100);
+        return z1/100;
+    }
+    
+    public double getTumourX0(){
+        double x0 = -(tumourDimensions[0]/2);
+        System.out.println("x0 = "+x0/100);
+        return x0/100;
+    }
+    
+    public double getTumourX1(){
+        double x1 = (tumourDimensions[0]/2);
+        System.out.println("x1 = "+x1/100);
+        return x1/100;
+    }
+    
+    public double getTumourY0(){
+        double y0 = -(tumourDimensions[1]/2);
+        System.out.println("y0 = "+y0/100);
+        return y0/100;
+    }
+    
+    public double getTumourY1(){
+        double y1 = (tumourDimensions[1]/2);
+        System.out.println("y1 = "+y1/100);
+        return y1/100;
+    }
+    
+    public double getTumourCenterPos(){
+        return (tumourDepthInPatient/100)+phantomPosition[2]; // m
+    }
     
 }

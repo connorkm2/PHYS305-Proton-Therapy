@@ -7,7 +7,7 @@ import java.util.Arrays;
 /// this import is needed for the file input/output functionality
 import java.io.*;
 
-class Voxel
+class Voxel extends Parameters
 { 
     private boolean plotPP;
     private double [] binlow, binhigh;
@@ -60,6 +60,7 @@ class Voxel
                 binCentre[a][i] = binlow[a] + (i+0.5)*binwidth[a];
             }
         }
+        System.out.println(Arrays.deepToString(binCentre));
     }
     // returns number of bins
     public int getNbins()
@@ -105,18 +106,6 @@ class Voxel
         
     }
     
-//    Will fill an array of slices of z with the sum of energy deposited 
-//    in those voxels. 
-//    Essentially uses the histogram bins to genertate a 3D matrix of values at 
-//    a coordinate of x,y,z
-    public void fillVoxels(double energy, Particle p){
-        int xBin = (int) ((p.x - binlow[0])/binwidth[0]);
-        int yBin = (int) ((p.y - binlow[1])/binwidth[1]);
-        int zBin = (int) ((p.z - binlow[2])/binwidth[2]);
-                
-        voxels[zBin][xBin][yBin] = voxels[zBin][xBin][yBin] + energy;      
-    }
-    
     // calculates absorbed dose for each Zslice
     public double [][] getAbsorbedDose(double [][][] voxels, 
                                     double x0, double y0, double z0,
@@ -159,7 +148,7 @@ class Voxel
     
     public void convertVoxelsToIsodose(){
         int centerbin = (int) ((0 - binlow[0])/binwidth[0]);
-        System.out.println(centerbin);
+        int centerZBin = (int) ((this.getTumourCenterPos() - binlow[2])/binwidth[2]);
         double maxValue = 0;
         for(int zi = 0; zi<nbins; zi++){
             for(int xi = 0; xi<nbins;xi++){
@@ -170,22 +159,43 @@ class Voxel
                 }
             }
         }
-        System.out.println("max value: "+maxValue);
+        //System.out.println("max value: "+maxValue);
         for(int zi = 0; zi<nbins; zi++){
             for(int xi = 0; xi<nbins;xi++){
                 for(int yi = 0; yi<nbins;yi++){
-                    voxels[zi][xi][yi] = (voxels[zi][xi][yi]/maxValue)*100;                    
+                    voxels[zi][xi][yi] = (voxels[zi][xi][yi]/voxels[centerZBin][50][50])*100;                    
                 }
             }
         }
     }
     
+    public boolean isInSphere(int xBin, int yBin, int zBin){
+        int centerBin = (int) ((this.getTumourCenterPos() - binlow[2])/binwidth[2]);
+        double rad = 0.03;
+        double radVoxel = Math.sqrt(Math.pow(binCentre[0][xBin], 2)
+                                +Math.pow(binCentre[1][yBin], 2)
+                                +Math.pow(binCentre[2][zBin]-binCentre[2][centerBin], 2));
+        return (radVoxel<rad);
+    }
+    
     public Histogram generateDVH(){
-        Histogram DVH = new Histogram(100, 0, 100, "DVH");
-        for(int zi = 0; zi<nbins; zi++){
-            for(int xi = 0; xi<nbins;xi++){
-                for(int yi = 0; yi<nbins;yi++){
-                    DVH.fill(voxels[zi][xi][yi]);
+        Histogram DVH = new Histogram(200, 0, 200, "DVH");
+        int centerBin = (int) ((this.getTumourCenterPos() - binlow[2])/binwidth[2]);
+        int zStart = (int) ((this.getTumourZ0() - binlow[2])/binwidth[2]);
+        int zEnd = (int) ((this.getTumourZ1() - binlow[2])/binwidth[2]);
+        int xStart = (int) ((this.getTumourX0() - binlow[0])/binwidth[0]);
+        int xEnd = (int) ((this.getTumourX1() - binlow[0])/binwidth[0]);
+        int yStart = (int) ((this.getTumourY0() - binlow[1])/binwidth[1]);
+        int yEnd = (int) ((this.getTumourY1() - binlow[1])/binwidth[1]);
+        System.out.println("center value:"+centerBin);
+        for(int zi = zStart; zi<zEnd; zi++){
+            for(int xi = xStart; xi<xEnd;xi++){
+                for(int yi = yStart; yi<yEnd;yi++){
+                    if(isInSphere(xi,yi,zi)){
+//                        System.out.println(voxels[zi][xi][yi]);
+                        DVH.fill((voxels[zi][xi][yi]/voxels[zi][50][50])*100);
+                        
+                    }
                 }
             }
         }
@@ -211,7 +221,7 @@ class Voxel
 //    This function is called so that it makes use of the output fucntions below 
 //    makes it easier for dumping data.
     public void writeData(double depth, String filename){
-        convertVoxelsToIsodose();
+        //convertVoxelsToIsodose();
         writeSOBP();
         writeProfile();
         writeZSlice(depth);
