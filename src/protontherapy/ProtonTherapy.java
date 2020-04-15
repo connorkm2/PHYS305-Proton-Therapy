@@ -26,7 +26,7 @@ class ProtonTherapy extends Parameters
     static final double startAngle = 0;      // Radians
     
     // Number of events to simulate (ie. the number of particles)
-    static int numberOfEvents = 1000;
+    static int numberOfEvents = 100000;
     
     // Energy ranges for when we add multiple energy ranges to flatten dose area
     static final double [][] energies = getEnergiesNEW(250);

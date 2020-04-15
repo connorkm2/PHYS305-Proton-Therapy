@@ -27,7 +27,7 @@ class Voxel extends Parameters
     
     //DVH info
     private int DVHnbins;
-    private double[] DVHvalues;
+    private double[][] DVHvalues;
 
     // constructor for the class Histogram
     public Voxel(int numberOfBins, double [] start, double [] end, String name, boolean plotBraggPeaks)
@@ -64,8 +64,8 @@ class Voxel extends Parameters
                 binCentre[a][i] = binlow[a] + (i+0.5)*binwidth[a];
             }
         }
-        DVHnbins = 150;
-        DVHvalues = new double[DVHnbins];
+        DVHnbins = 100;
+        DVHvalues = new double[2][DVHnbins];
         
         System.out.println(Arrays.deepToString(binCentre));
     }
@@ -92,7 +92,7 @@ class Voxel extends Parameters
     public int getDVHnbins(){
         return DVHnbins;
     }
-    public double[] getDVHvalues(){
+    public double[][] getDVHvalues(){
         return DVHvalues;
     }
     public double getVoxelVolume(){
@@ -194,49 +194,48 @@ class Voxel extends Parameters
         return (radVoxel<rad);
     }
     
-    public double[][] generateOtherDVH(){
-        Histogram DVH = generateDVH();
-        double totalVoxels = 0;
-        double[] dDVH = new double[DVH.getNbins()];
-        double[] cDVH = new double[DVH.getNbins()];
+    public double[][][] generateOtherDVH(){
+        Histogram[] DVH = generateDVH();
+        double[] totalVoxels = new double[2];
+        double[][][] DVHs = new double[2][2][DVHnbins];
+        //double[][] DVH = new double[2][DVHnbins];
         
-        for(int i = 0; i < DVH.getNbins(); i++){
-            DVHvalues[i] = DVH.getContent(i);
-            totalVoxels += DVH.getContent(i); }
-        for(int i = 0; i < DVH.getNbins(); i++){
-            dDVH[i] = DVHvalues[i]/totalVoxels;
-            if(i==0){
-                cDVH[i] = 1-dDVH[i];
-            }else{
-                cDVH[i] = cDVH[i-1]-dDVH[i]; 
+        for(int a = 0; a < DVH.length; a++){
+            for(int i = 0; i < DVHnbins; i++){
+                DVHvalues[a][i] = DVH[a].getContent(i);
+                totalVoxels[a] += DVH[a].getContent(i); 
             }
         }
-        double[][] output = {dDVH, cDVH};
-        return output;
+        for(int a = 0; a < DVH.length; a++){
+            for(int i = 0; i < DVHnbins; i++){
+                DVHs[0][a][i] = DVHvalues[a][i]/totalVoxels[a];
+                if(i==0){
+                    DVHs[1][a][i] = 1-DVHs[0][a][i];
+                }else{
+                    DVHs[1][a][i] = DVHs[1][a][i-1]-DVHs[0][a][i]; 
+                }
+            }
+        }
+        return DVHs;
     }
     
-    public Histogram generateDVH(){
-        Histogram DVHTumour = new Histogram(DVHnbins, 0, 200, "DVH");
-        int centerBin = (int) ((this.getTumourCenterPos() - binlow[2])/binwidth[2]);
-        int zStart = (int) ((this.getTumourZ0() - binlow[2])/binwidth[2]);
-        int zEnd = (int) ((this.getTumourZ1() - binlow[2])/binwidth[2]);
-        int xStart = (int) ((this.getTumourX0() - binlow[0])/binwidth[0]);
-        int xEnd = (int) ((this.getTumourX1() - binlow[0])/binwidth[0]);
-        int yStart = (int) ((this.getTumourY0() - binlow[1])/binwidth[1]);
-        int yEnd = (int) ((this.getTumourY1() - binlow[1])/binwidth[1]);
-        for(int zi = zStart; zi<zEnd; zi++){
-            for(int xi = xStart; xi<xEnd;xi++){
-                for(int yi = yStart; yi<yEnd;yi++){
+    public Histogram[] generateDVH(){
+        Histogram DVHTumour = new Histogram(DVHnbins, 0, 150, "DVHTumour");
+        Histogram DVHBody = new Histogram(DVHnbins, 0, 150, "DVHBody");
+
+        for(int zi = 0; zi<nbins; zi++){
+            for(int xi = 0; xi<nbins;xi++){
+                for(int yi = 0; yi<nbins;yi++){
                     if(isInSphere(xi,yi,zi)){
-//                        System.out.println(voxels[zi][xi][yi]);
-                        DVHTumour.fill((voxels[zi][xi][yi]/voxels[zi][50][50])*100);
-                        
+                        DVHTumour.fill((voxels[zi][xi][yi]/voxels[zi][50][50])*100);                      
+                    }else{
+                        DVHBody.fill((voxels[zi][xi][yi]/voxels[zi][50][50])*100);
                     }
                 }
             }
         }
-                
-        return DVHTumour;
+        Histogram[] hists = {DVHTumour, DVHBody};        
+        return hists;
     }
         
     //-------------------------------------
@@ -389,7 +388,7 @@ class Voxel extends Parameters
     }
     
     public void writeDVH(){
-        double[][] DVHs = generateOtherDVH();
+        double[][][] DVHs = generateOtherDVH();
         String filename = "DVH.csv";
         PrintWriter outputFile;
         try{
@@ -399,18 +398,18 @@ class Voxel extends Parameters
             return;
         }
         
-        for(int i = 0; i < DVHs[0].length; i++){
-            outputFile.println(i+","+DVHs[0][i]+","+DVHs[1][i]);
+        for(int i = 0; i < DVHnbins; i++){
+            outputFile.println(i+","+DVHs[0][0][i]+","+DVHs[1][0][i]+","+DVHs[0][1][i]+","+DVHs[1][1][i]);
         }
         outputFile.close(); // close the output file
         System.out.println(filename+" written!"); 
     }
     
     public void writeInfo(){
-        double TCP = this.getTCP(this.getDVHvalues(), this.getVoxelVolume());
+        //double TCP = this.getTCP(this.getDVHvalues(), this.getVoxelVolume());
         
         System.out.println("*** START INFO OUTPUT ***");
-        System.out.println("TCP: "+TCP);
+        //System.out.println("TCP: "+TCP);
     }
 
 }
