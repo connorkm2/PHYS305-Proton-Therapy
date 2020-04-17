@@ -6,8 +6,11 @@ public class ParticleTracker
 {
     private double dt;
     private int steps;
-    private Particle input;
-    private Particle output;
+    
+    // changed from private
+    public Particle input;
+    public Particle output;
+    
     private Track storeTrack;
     private boolean useRK4;
 
@@ -31,6 +34,8 @@ public class ParticleTracker
         // output will evolve to the final particle, lastStep will keep the state before the last step
         output = new Particle(input);
         Particle lastStep = new Particle(output);
+        
+        double [] EnergyLossArray = new double [steps];
 
         int lastVolume = Experiment.getVolume(output);
 
@@ -60,7 +65,9 @@ public class ParticleTracker
                 
             // implement Energy Loss, uncomment to use
             if (output.E() > output.mass()) {
-                Experiment.doEloss(output, output.distance(lastStep), ke);
+                // stores energy loss at each step in array
+                EnergyLossArray[n] = Experiment.doEloss(output, output.distance(lastStep), ke);
+
             }
             
             // store the current position/mometum
@@ -92,10 +99,11 @@ public class ParticleTracker
 
             // save last state
             lastStep.setState(output);
+            
         }
 
         // return the final, propagated particle
-        return output;
+        return Pair.pair(output, EnergyLossArray);
     }
 
     public Track getTrack()
