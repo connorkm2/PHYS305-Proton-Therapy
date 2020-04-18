@@ -16,7 +16,7 @@ public double [] getPhantomEnd(double [] phantomPosition) {
        return end;
 }
     
-public double [][][] LET(int nbins, int numberOfEvents, double [] phantomPosition) {
+public double [][][] LET(double x, double y, double z, int nbins, int numberOfEvents, double [] phantomPosition) {
     // intialising array to store LET of each voxel
     double [][][] LET = new double [nbins][nbins][nbins];
     
@@ -44,7 +44,10 @@ public double [][][] LET(int nbins, int numberOfEvents, double [] phantomPositio
                 for (int k = 0; k < nbins; k++) {
                     
                     // checking if particle is in certain voxel volume
-                    if (x > ) {
+                    if (x > voxel_x[i]) && (x < voxel_x[i+1]) && 
+                        (y > voxel_y[j]) && (y < voxel_y[j+1]) &&
+                        (z > voxel_z[k]) && (z < voxel_z[k+1]) { 
+                            
                         
                     }
                 

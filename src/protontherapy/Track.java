@@ -1,6 +1,7 @@
 package protontherapy;
 // this import is needed for the file input/output functionality
 import java.io.*;
+import java.util.stream.*;
 
 class Track
 {
@@ -72,4 +73,33 @@ class Track
         return;
     }
     
+    // returns array of step sizes
+    public double [] getStepSize(int i, int steps) {
+        // initialising array to store distance of each step
+       double [] trackLength = new double[steps];
+       
+       // calculates step distance in x, y, z
+       double stepDist = Math.pow(x[i]-x[i-1], 2);
+       stepDist = stepDist + Math.pow(y[i] - y[i-1], 2);
+       stepDist = stepDist + Math.pow(z[i] - z[i-1], 2);
+       
+       trackLength[i] = stepDist;
+       
+       // need to sum total distance, where does this happen? - do I only need to do it in Z?
+       
+    return trackLength;
+    }
+    
+    /*
+    public double [] getEnergyArray(int steps, output) {
+            
+    // calculate total energy loss
+    double [] EnergyLossArray = new double [steps];
+    EnergyLossArray[n] = Experiment.doEloss(output, output.distance(lastStep), ke);
+    
+    return EnergyLossArray;
+    }
+    */
+    
+
 }

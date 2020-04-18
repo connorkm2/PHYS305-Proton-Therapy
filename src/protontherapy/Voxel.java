@@ -12,7 +12,8 @@ class Voxel extends Parameters
     private boolean plotPP;
     private double [] binlow, binhigh;
     private double [] binwidth;
-    private int nbins;
+    // changed from private 
+    public int nbins;
     private double[][] binCentre;
     private String histname;
 
@@ -64,11 +65,12 @@ class Voxel extends Parameters
                 binCentre[a][i] = binlow[a] + (i+0.5)*binwidth[a];
             }
         }
-        DVHnbins = 100;
+        DVHnbins = 150;
         DVHvalues = new double[2][DVHnbins];
         
         System.out.println(Arrays.deepToString(binCentre));
     }
+
     // returns number of bins
     public int getNbins()
     {
@@ -99,6 +101,54 @@ class Voxel extends Parameters
         return (binwidth[0]*binwidth[1]*binwidth[2]);
     }
     
+    // returns voxel x coordinates
+    public double [] getVoxelx(double [] phantomPosition, int nbins){
+        // initialise voxel x array
+        double [] voxelx = new double [nbins+1];
+        // returns start and end x values
+        double startx = phantomPosition[0];
+        double endx = phantomPosition[3];
+        // calculates step length in x
+        double stepdist = (phantomPosition[3] - phantomPosition[0])/nbins; 
+        // fills voxelx array with x coords
+        for (int i = 0; i < nbins; i++){
+            voxelx[i] = startx + i*stepdist;
+        }
+        return voxelx;
+    }
+    
+    // returns voxel y coordinates
+    public double [] getVoxely(double [] phantomPosition, int nbins){
+        // initialise voxel y array
+        double [] voxely = new double [nbins+1];
+        // returns start and end y values
+        double starty = phantomPosition[1];
+        double endy = phantomPosition[4];
+        // calculates step length in y
+        double stepdist = (phantomPosition[4] - phantomPosition[1])/nbins; 
+        // fills voxely array with y coords
+        for (int i = 0; i < nbins; i++){
+            voxely[i] = starty + i*stepdist;
+        }
+        return voxely;
+    }
+    
+    // returns voxel z coordinates
+    public double [] getVoxelz(double [] phantomPosition, int nbins){
+        // initialise voxel z array
+        double [] voxelz = new double [nbins+1];
+        // returns start and end z values
+        double startz = phantomPosition[2];
+        double endz = phantomPosition[5];
+        // calculates step length in z
+        double stepdist = (phantomPosition[5] - phantomPosition[2])/nbins; 
+        // fills voxelz array with z coords
+        for (int i = 0; i < nbins; i++){
+            voxelz[i] = startz + i*stepdist;
+        }
+        return voxelz;
+    }
+    
 //    double energy: the value of energy depositited. 
 //    int ke: position value of energy of current itteration in main of ProtonTherapy.
 //    If output is normal combined bragg peak (ke = 0)
@@ -123,7 +173,7 @@ class Voxel extends Parameters
     }
     
     // calculates absorbed dose for each Zslice
-    public double [][] getAbsorbedDose(double [][][] voxels, 
+    public double [] getAbsorbedDose(double [][][] voxels, 
                                     double x0, double y0, double z0,
                                     double x1, double y1, double z1, 
                                     double rhoin) {
@@ -134,7 +184,7 @@ class Voxel extends Parameters
         // calculates voxel mass
         double voxelMass = rhoin*voxelVolume;
         // initialises absorbed dose array
-        double [][] AbsorbedDose = new double [2][nbins];
+        double [] AbsorbedDose = new double [nbins];
         
         // for z slices
         for (int i = 0; i < nbins; i++){
@@ -147,7 +197,7 @@ class Voxel extends Parameters
                 }
                 }
             // total energy absorbed in slice / total slice mass
-            AbsorbedDose[0][i] = total_energy[0][i]/(voxelMass*Math.pow(nbins, 2));
+            AbsorbedDose[i] = total_energy[0][i]/(voxelMass*Math.pow(nbins, 2));
             
             }
         return AbsorbedDose;
@@ -187,7 +237,7 @@ class Voxel extends Parameters
     
     public boolean isInSphere(int xBin, int yBin, int zBin){
         int centerBin = (int) ((this.getTumourCenterPos() - binlow[2])/binwidth[2]);
-        double rad = 0.03;
+        double rad = 0.018;
         double radVoxel = Math.sqrt(Math.pow(binCentre[0][xBin], 2)
                                 +Math.pow(binCentre[1][yBin], 2)
                                 +Math.pow(binCentre[2][zBin]-binCentre[2][centerBin], 2));
@@ -320,7 +370,7 @@ class Voxel extends Parameters
     
     // write file with the absorbed dose for each z slice
     public void writeDose() {
-        double [][] absorbed_dose = new double [2][nbins];
+        double [] absorbed_dose = new double [nbins];
         String filename = "AbsorbedDose.csv";
         
         PrintWriter outputFile;
@@ -335,9 +385,9 @@ class Voxel extends Parameters
         absorbed_dose = getAbsorbedDose(voxels, -0.20, -0.20, 0.22,            // start x, y, z
                              0.20, 0.20, 0.72, 1);
         System.out.println("horse");
-        System.out.println(Arrays.deepToString(absorbed_dose));
+        System.out.println(Arrays.toString(absorbed_dose));
         for(int i = 0; i < nbins; i++) {
-            outputFile.print(absorbed_dose[0][i] +",");
+            outputFile.print(absorbed_dose[i] +",");
         }
         
         outputFile.println();

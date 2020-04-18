@@ -274,13 +274,16 @@ class Geometry
         return getVolume(p.x, p.y, p.z);
     }
     
-    public void doEloss(Particle p, double dist, int beamWeight)
+    // modified from 'void' to 'double' to return lostE
+    public double doEloss(Particle p, double dist, int beamWeight)
     {
         int volume = getVolume(p);
+        double lostE = 0;
 
         if (volume >= 1) {
-            double lostE = Eloss[volume].getEnergyLoss(p)*dist;
+            lostE = Eloss[volume].getEnergyLoss(p)*dist;
             p.reduceEnergy(lostE);
+            
             //System.out.println(p.momentum());
             if(isInVolume(p, 2)){
                 if(isInVolume(p, 4)){System.out.println("1");}
@@ -292,6 +295,7 @@ class Geometry
 
             }
         }
+        return lostE;
     }
  
     public void writeEnergyHist(double depth, String filename){

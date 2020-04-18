@@ -2,7 +2,7 @@ package protontherapy;
 
 // Contains Euler and Runge-Kutte 4th order integrator methods
 
-public class ParticleTracker
+public class ParticleTracker 
 {
     private double dt;
     private int steps;
@@ -28,7 +28,7 @@ public class ParticleTracker
         storeTrack.savePositionMomentum(input);
     }
 
-    public Particle track(Geometry Experiment, int ke)
+    public Pair track(Geometry Experiment, int ke)
     {
         // make two copies of the input particle:
         // output will evolve to the final particle, lastStep will keep the state before the last step
@@ -65,7 +65,7 @@ public class ParticleTracker
                 
             // implement Energy Loss, uncomment to use
             if (output.E() > output.mass()) {
-                // stores energy loss at each step in array
+                // stores energy loss at each step in array (returns dE)
                 EnergyLossArray[n] = Experiment.doEloss(output, output.distance(lastStep), ke);
 
             }
@@ -99,11 +99,12 @@ public class ParticleTracker
 
             // save last state
             lastStep.setState(output);
+         
             
         }
 
-        // return the final, propagated particle
-        return Pair.pair(output, EnergyLossArray);
+        // return the final, propagated particle ***
+        return new Pair(output, EnergyLossArray);
     }
 
     public Track getTrack()

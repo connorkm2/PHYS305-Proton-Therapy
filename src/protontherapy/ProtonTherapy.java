@@ -26,7 +26,7 @@ class ProtonTherapy extends Parameters
     static final double startAngle = 0;      // Radians
     
     // Number of events to simulate (ie. the number of particles)
-    static int numberOfEvents = 100000;
+    static int numberOfEvents = 1000;
     
     // Energy ranges for when we add multiple energy ranges to flatten dose area
     static final double [][] energies = getEnergiesNEW(250);
@@ -90,8 +90,12 @@ class ProtonTherapy extends Parameters
     //                 Particles_gen[ip].print();
 
                     ParticleTracker tracker = new ParticleTracker(Particles_gen[ip], time, nsteps, useRungeKutta4);
-
-                    Particles_sim[ip] = tracker.track(Experiment, ke);
+                    
+                    // now of type pair
+                    Pair pair_new = tracker.track(Experiment, ke);
+                    
+                    // converting from pair to particle
+                    Particles_sim[ip] = pair_new.getOutput();
 
 //                     System.out.println("Output particle");
 //                     Particles_sim[ip].print();
@@ -218,14 +222,14 @@ class ProtonTherapy extends Parameters
         Experiment.AddCuboid(pos2,
                              2.33, 14, 28.085, "Si detector");                 // density, Z, A
         
-         //Contoured Scatterer
+//         //Contoured Scatterer
         Experiment.AddContour(-0.2, -0.2, 0.05,
                              16.65, 73, 180.94788, "Contour scatter");
         
 //        //Aperture
 //        Experiment.AddAperture(0.03, 0.2, 0.2, 0.21,
 //                               11.34, 82, 207.2, "Aperture");
-       
+//       
         
         Experiment.Print();
 
