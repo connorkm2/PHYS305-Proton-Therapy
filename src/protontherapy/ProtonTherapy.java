@@ -78,6 +78,11 @@ class ProtonTherapy extends Parameters
 
                 // get the particles of the event to simulate
                 Particle [] Particles_gen = GetParticles(energies[ke][0]);
+                
+                // initialise energylossarray
+                
+                double [] EnergyLossArray;
+                double [] stepsize;
 
                 // simulate propagation of each generated particle,
                 // store output in Particles_sim and Tracks_sim
@@ -96,6 +101,10 @@ class ProtonTherapy extends Parameters
                     
                     // converting from pair to particle
                     Particles_sim[ip] = pair_new.getOutput();
+                    
+                    EnergyLossArray = pair_new.getEnergyLossArray();
+                    
+                    stepsize = pair_new.getStepsize();
 
 //                     System.out.println("Output particle");
 //                     Particles_sim[ip].print();

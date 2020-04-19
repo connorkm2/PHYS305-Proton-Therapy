@@ -12,6 +12,7 @@ public class ParticleTracker
     public Particle output;
     
     private Track storeTrack;
+    private Track findStepSize;
     private boolean useRK4;
 
     static final double c = 3e8; // speed of light in m/s
@@ -22,10 +23,12 @@ public class ParticleTracker
         steps = N;    // do one more step to arrive at final position
         dt = Tmax/N;    // deltaT to arrive at final time
         useRK4 = useRungeKutta4;
+      
 
         // store the particle track in a separate object and save first point
         storeTrack = new Track(input.mass(), steps+1);
         storeTrack.savePositionMomentum(input);
+        
     }
 
     public Pair track(Geometry Experiment, int ke)
@@ -36,11 +39,13 @@ public class ParticleTracker
         Particle lastStep = new Particle(output);
         
         double [] EnergyLossArray = new double [steps];
+        
 
         int lastVolume = Experiment.getVolume(output);
 
         for(int n = 0; n < steps; n++){
             
+            double [] stepsize;
             // propagate particle in steps
             if (useRK4) {
                 propogateParticleRK4(dt); // Runge-Kutta 4th order integrator
@@ -99,12 +104,15 @@ public class ParticleTracker
 
             // save last state
             lastStep.setState(output);
-         
             
+            // get step array
+            Track track = new Track(input.mass(), steps+1);
+            stepsize = track.findStepSize(n, steps);
+    
         }
 
         // return the final, propagated particle ***
-        return new Pair(output, EnergyLossArray);
+        return new Pair(output, EnergyLossArray, stepsize);
     }
 
     public Track getTrack()

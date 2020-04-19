@@ -74,7 +74,7 @@ class Track
     }
     
     // returns array of step sizes
-    public double [] getStepSize(int i, int steps) {
+    public double [] findStepSize(int i, int steps) {
         // initialising array to store distance of each step
        double [] trackLength = new double[steps];
        

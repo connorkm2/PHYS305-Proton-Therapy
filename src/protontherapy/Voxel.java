@@ -7,7 +7,7 @@ import java.util.Arrays;
 /// this import is needed for the file input/output functionality
 import java.io.*;
 
-class Voxel extends Parameters
+class Voxel extends RBE 
 { 
     private boolean plotPP;
     private double [] binlow, binhigh;
@@ -29,6 +29,11 @@ class Voxel extends Parameters
     //DVH info
     private int DVHnbins;
     private double[][] DVHvalues;
+    
+    // voxel coords arrays
+    private double [] voxelx;
+    private double [] voxely;
+    private double [] voxelz;
 
     // constructor for the class Histogram
     public Voxel(int numberOfBins, double [] start, double [] end, String name, boolean plotBraggPeaks)
@@ -101,53 +106,11 @@ class Voxel extends Parameters
         return (binwidth[0]*binwidth[1]*binwidth[2]);
     }
     
-    // returns voxel x coordinates
-    public double [] getVoxelx(double [] phantomPosition, int nbins){
-        // initialise voxel x array
-        double [] voxelx = new double [nbins+1];
-        // returns start and end x values
-        double startx = phantomPosition[0];
-        double endx = phantomPosition[3];
-        // calculates step length in x
-        double stepdist = (phantomPosition[3] - phantomPosition[0])/nbins; 
-        // fills voxelx array with x coords
-        for (int i = 0; i < nbins; i++){
-            voxelx[i] = startx + i*stepdist;
-        }
-        return voxelx;
-    }
+
     
-    // returns voxel y coordinates
-    public double [] getVoxely(double [] phantomPosition, int nbins){
-        // initialise voxel y array
-        double [] voxely = new double [nbins+1];
-        // returns start and end y values
-        double starty = phantomPosition[1];
-        double endy = phantomPosition[4];
-        // calculates step length in y
-        double stepdist = (phantomPosition[4] - phantomPosition[1])/nbins; 
-        // fills voxely array with y coords
-        for (int i = 0; i < nbins; i++){
-            voxely[i] = starty + i*stepdist;
-        }
-        return voxely;
-    }
+
     
-    // returns voxel z coordinates
-    public double [] getVoxelz(double [] phantomPosition, int nbins){
-        // initialise voxel z array
-        double [] voxelz = new double [nbins+1];
-        // returns start and end z values
-        double startz = phantomPosition[2];
-        double endz = phantomPosition[5];
-        // calculates step length in z
-        double stepdist = (phantomPosition[5] - phantomPosition[2])/nbins; 
-        // fills voxelz array with z coords
-        for (int i = 0; i < nbins; i++){
-            voxelz[i] = startz + i*stepdist;
-        }
-        return voxelz;
-    }
+    
     
 //    double energy: the value of energy depositited. 
 //    int ke: position value of energy of current itteration in main of ProtonTherapy.
