@@ -164,16 +164,14 @@ public double [][][] LET(double x, double y, double z, int nbins, int numberOfEv
         return simpleRBEWeight;
     }
     
-    // CASE 2 - CARABE-FERNANDEZ MODEL
-        public double [][][] CarFerRBE(double [][][] dE, int nbins) {
-        double alpha_beta = 2.686;
-            
-        // initialising RBE weighted dose
-        double [][][] CarFerRBEWeight = new double [nbins][nbins][nbins];
-        
-        // initialising array for variable RBE
+// CURRENTLY ALL METHODS BELOW ARE VOID - NEED TO WORK OUT HOW TO INCLUDE FILL FUNCTION
+// CASE 2 - CARABE-FERNANDEZ MODEL
+    
+    // calculates RBE max and associated weighted dose
+    public void CarFerRBEmax(double [][][] dE, double [][][] LET, double alpha_beta, int nbins) {
+        // initialising arrays
         double [][][] RBEmax = new double [nbins][nbins][nbins];
-        double [][][] RBEmin = new double [nbins][nbins][nbins];
+        double [][][] maxCarFerRBEWeight = new double [nbins][nbins][nbins];
         
         // for voxels in z
         for (int i = 0; i < nbins; i++){
@@ -181,17 +179,74 @@ public double [][][] LET(double x, double y, double z, int nbins, int numberOfEv
             for (int j = 0; j < nbins; j++) {
                 // for voxels in y
                 for (int k = 0; k < nbins; k++) {
-                RBEmax[i][j][k] = 0.834 + 0.154*(2.686/(alpha_beta));
-                    
-                CarFerRBEWeight[i][j][k] = RBE*dE[i][j][k];
+                RBEmax[i][j][k] = 0.834 + 0.154*(2.686/(alpha_beta))*LET[i][j][k];
+                maxCarFerRBEWeight[i][j][k] = RBEmax[i][j][k]*dE[i][j][k];
+    }
+            }
+        }
+        
+    }
+    
+    // calculates RBE min and associated weighted dose
+    public void CarFerRBEmin(double [][][] dE, double [][][] LET, double alpha_beta, int nbins) {
+        // initialising arrays
+        double [][][] RBEmin = new double [nbins][nbins][nbins];
+        double [][][] minCarFerRBEWeight = new double [nbins][nbins][nbins];
+        // for voxels in z
+        for (int i = 0; i < nbins; i++){
+            // for voxels in x
+            for (int j = 0; j < nbins; j++) {
+                // for voxels in y
+                for (int k = 0; k < nbins; k++) {
+                RBEmin[i][j][k] = 0.834 + 0.154*(2.686/(alpha_beta))*LET[i][j][k];
+                minCarFerRBEWeight[i][j][k] = RBEmin[i][j][k]*dE[i][j][k];
+        
                 }
             }
         }
         
-        return CarFerRBEWeight;
+    }
+   
+
+        
+    // CASE 3 - WEDENBERG MODEL
+    
+    public void WendelRBEmin(double [][][] dE, double [][][] LET, double alpha_beta, int nbins, double RBEmin) {
+        // initialising arrays
+        double [][][] minWendelRBEWeight = new double [nbins][nbins][nbins];
+        // for voxels in z
+        for (int i = 0; i < nbins; i++){
+            // for voxels in x
+            for (int j = 0; j < nbins; j++) {
+                // for voxels in y
+                for (int k = 0; k < nbins; k++) {
+                minWendelRBEWeight[i][j][k] = RBEmin*dE[i][j][k];
+        
+                }
+            }
         }
+        
+    }
 
-
+        public void WendelRBEmax(double [][][] dE, double [][][] LET, double alpha_beta, int nbins) {
+        // initialising arrays
+        double [][][] maxWendelRBEWeight = new double [nbins][nbins][nbins];
+        double [][][] RBEmax = new double [nbins][nbins][nbins];
+        // for voxels in z
+        for (int i = 0; i < nbins; i++){
+            // for voxels in x
+            for (int j = 0; j < nbins; j++) {
+                // for voxels in y
+                for (int k = 0; k < nbins; k++) {
+                RBEmax[i][j][k] = 1.00 + (0.434/(alpha_beta))*LET[i][j][k];
+                maxWendelRBEWeight[i][j][k] = RBEmax[i][j][k]*dE[i][j][k];
+        
+                }
+            }
+        }
+        
+    }
+    
     
 }
 

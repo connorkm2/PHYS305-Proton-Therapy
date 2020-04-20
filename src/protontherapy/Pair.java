@@ -12,6 +12,7 @@ public class Pair {
         this.stepsize = stepsize;
     }
 
+
     public Particle getOutput() {
         return output;
     }
@@ -23,6 +24,7 @@ public class Pair {
     public double [] getStepsize() {
         return stepsize;
     }
+    
 
 public Pair Result(Particle output, double[] EnergyLossArray, double [] stepsize) {
 
