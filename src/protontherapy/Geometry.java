@@ -44,6 +44,7 @@ class Geometry
     private MCS [] MultScatter;
     
     private Voxel voxels;
+    
 
     private double minfeaturesize;
     
@@ -301,6 +302,8 @@ class Geometry
     public void writeEnergyHist(double depth, String filename){
         //voxels.writeToDisk(filename);
         voxels.writeData(depth, filename);
+        
+        
     }
     
     public void doMultScatter(Particle p, double dist)

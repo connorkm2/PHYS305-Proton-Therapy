@@ -4,143 +4,192 @@ import java.io.*;
 import java.util.Arrays;
 import java.util.stream.*;
 
-public class RBE {
+public class RBE extends Parameters {
     
-public double [][][] LET(double x, double y, double z, int nbins, int numberOfEvents, double [] phantomPosition,
-                            double [] voxelx, double [] voxely, double [] voxelz, double [] EnergyLossArray, double [] stepsize) {
-    
-    // density
-    double rho = 1000; //kgm^-3
+    double rho = 1000;
+   
+    private double [] binlow, binhigh;
+    private double [] binwidth;
+    // changed from private 
+    private int nbins;
+    private double[][] binCentre;
+    private String histname;
 
-    // intialising array to store LET of each voxel
-    double [][][] LET = new double [nbins][nbins][nbins];
+    // double array to store the actual histogram data
+    private double[][] zSliceEnergyPP;
+
+    private long underflow, overflow;
+    private long nfilled;
+    
+    //3D array of Voxels for generating z slice matrices
+    private double[][][] voxels;
+    private double[][][] LET;
     
     // initialisng arrays to store dE and dz for each voxel.
     double [][][] dE = new double [nbins][nbins][nbins];
     double [][][] dEdz = new double [nbins][nbins][nbins];
     
-    double [] start = getPhantomStart(phantomPosition);
-    double [] end = getPhantomEnd(phantomPosition);
     
-    voxelx = getVoxelx(phantomPosition, nbins);
-    voxely = getVoxely(phantomPosition, nbins);
-    voxelz = getVoxelz(phantomPosition, nbins);
+    //DVH info
+    private int DVHnbins;
+    private double[][] DVHvalues;    
+    
+    public RBE(int numberOfBins, double [] start, double [] end, String name) {
+        // store the parameters and setup the histogram
+        // note that parameters need to have different names than class variables
+        nbins = numberOfBins;
         
-    // for voxels in z
-    for (int i = 0; i < nbins; i++){
-        // for voxels in x
-        for (int j = 0; j < nbins; j++) {
-            // for voxels in y
-            for (int k = 0; k < nbins; k++) {
+        binlow = start; // beginning coordinates
+        binhigh = end; // end coordinates
+        
+        histname = name;
                 
-                    // for all particles
-                    for (int a = 0; a < numberOfEvents; a++) {
-                    
-                    // checking if particle is in certain voxel volume
-                    if ((voxelx[i] <= x) && (x <= voxelx[i+1]) && 
-                        (voxely[j] <= y) && (y <= voxely[j+1]) &&
-                        (voxelz[k] <=  z) && (z <= voxelz[k+1])) { 
-                        
-                        // calculate energy loss in specific voxel and sum to find total energy gained by voxel
-                           double dEProton = finddE(EnergyLossArray);
-                           dE[i][j][k] += dEProton;
-                        
-                        // calculate track length of particular particle
-                           double dz = findTrackLength(stepsize);
-                           
-                        // calculate dE/dz for each voxel and sum 
-                           dEdz[i][j][k] += (dEProton/dz);
-                           
+        binwidth = new double[3];
+        
+        // variables 
+        for(int i = 0; i < binlow.length; i++){
+            binwidth[i] = (binhigh[i] - binlow[i]) / (double) nbins;
+        }
+        //zSliceEnergyPP = new double[ProtonTherapy.energies.length][nbins];
+        underflow = 0;
+        overflow = 0;
+        nfilled = 0;
+        
+        voxels = new double [nbins][nbins][nbins];
+        LET = new double [nbins][nbins][nbins];
+        dE = new double [nbins][nbins][nbins];
+        dEdz = new double [nbins][nbins][nbins];
+                
+        // calculate the centre of each bin for all dimensions
+        binCentre = new double[3][nbins];
+        for(int a = 0; a < 3; a++){
+            for (int i = 0; i < nbins; i++) {
+                binCentre[a][i] = binlow[a] + (i+0.5)*binwidth[a];
+            }
+        }
+        DVHnbins = 150;
+        DVHvalues = new double[2][DVHnbins];
+        
+        System.out.println(Arrays.deepToString(binCentre));
+       
+    }
+    
+        // returns number of bins
+    public int getNbins()
+    {
+        return nbins;
+    }
+    // returns underflow variable
+    public long getUnderflow()
+    {
+        return underflow;
+    }
+    // returns overflow variable
+    public long getOverflow()
+    {
+        return overflow;
+    }
+    // returns number variable
+    public long getNfilled()
+    {
+        return nfilled;
+    }
+    public int getDVHnbins(){
+        return DVHnbins;
+    }
+    public double[][] getDVHvalues(){
+        return DVHvalues;
+    }
+    public double getVoxelVolume(){
+        return (binwidth[0]*binwidth[1]*binwidth[2]);
+    }
+    
+    // returns data from LET hist
+    public double [] getLET(int ke, int nbin)
+    {
+        // returns the contents on bin 'nbin' to the user
+        return LET[ke][nbin];
+    }
+
+    // need to modify this for calculating LET 
+    public void fill(double LETParticle, Particle p, int ke){
+    //fillVoxels(energy, p);
+
+    int xBin = (int) ((p.x - binlow[0])/binwidth[0]);
+    int yBin = (int) ((p.y - binlow[1])/binwidth[1]);
+    int zBin = (int) ((p.z - binlow[2])/binwidth[2]);
+
+    if(p.x < binlow[0] || p.y < binlow[1] || p.z < binlow[2]){
+        underflow++;
+    }else if(p.x > binhigh[0] || p.y > binhigh[1] || p.z > binhigh[2]){
+        overflow++;
+    }else{
+        LET[zBin][xBin][yBin] = LET[zBin][xBin][yBin] + LETParticle;
+    }
+    }
+    
+    // ***how do I reference this directly from voxel class?
+        // checks if particle is in tumour
+    public boolean isInSphere(int xBin, int yBin, int zBin){
+    int centerBin = (int) ((this.getTumourCenterPos() - binlow[2])/binwidth[2]);
+    double rad = 0.018;
+    double radVoxel = Math.sqrt(Math.pow(binCentre[0][xBin], 2)
+                            +Math.pow(binCentre[1][yBin], 2)
+                            +Math.pow(binCentre[2][zBin]-binCentre[2][centerBin], 2));
+    return (radVoxel<rad);
+    }
+    
+
+    // creates histogram of LET energies
+    public Histogram [] LET(double [] EnergyLossArray, double [] distance){
+        String filename = "LETHist.csv";
+        Histogram LET = new Histogram(DVHnbins, 0, 150, "LET");
+        
+        double totalEloss = finddE(EnergyLossArray);
+        double dist = findTrackLength(distance);
+        double dE_dz = totalEloss/dist;
+        double LETParticle = (totalEloss*dE_dz*(1/rho))/(totalEloss);
+    
+        for(int zi = 0; zi<nbins; zi++){
+            for(int xi = 0; xi<nbins;xi++){
+                for(int yi = 0; yi<nbins;yi++){
+                    // if particle is in tumour volume, fill LET hist
+                    if(isInSphere(xi,yi,zi)){
+                        LET.fill(LETParticle);                      
                     }
-    
-                }  
-                // calculate final LET for each voxel
-                LET[i][j][k] = (dE[i][j][k]*dEdz[i][j][k]*(1/rho))/dE[i][j][k];
-}
-}
-}
-
-        return LET;
-}
-
-    public double [] getPhantomStart(double [] phantomPosition) {
-           double [] start = Arrays.copyOfRange(phantomPosition, 0, 2); 
-           return start;
-    }
-
-    public double [] getPhantomEnd(double [] phantomPosition) {
-            double [] end = Arrays.copyOfRange(phantomPosition, 3, 5);
-           return end;
-    }
-
-    // returns energy lost by single particle in said voxel
-    public double finddE (double [] EnergyLossArray) {
-        double totalEloss = 0;
-        // summing all elements in array
-        for (int i = 0; i < EnergyLossArray.length; i++) {
-            totalEloss += EnergyLossArray[i];
+                }
+            }
         }
-        return totalEloss;
-    }
-
-    // returns total distance travelled by particle
-    public double findTrackLength(double [] stepsize) {
-        double totalTrackLength = 0;
-        // summing all elements in array
-        for (int i = 0; i < stepsize.length; i++) {
-            totalTrackLength += stepsize[i];
-        }
-        return totalTrackLength;  
-    }    
-
-        // returns voxel x coordinates
-    public double [] getVoxelx(double [] phantomPosition, int nbins){
-        // initialise voxel x array
-        double [] voxelx = new double [nbins+1];
-        // returns start and end x values
-        double startx = phantomPosition[0];
-        double endx = phantomPosition[3];
-        // calculates step length in x
-        double stepdist = (phantomPosition[3] - phantomPosition[0])/nbins; 
-        // fills voxelx array with x coords
-        for (int i = 0; i < nbins; i++){
-            voxelx[i] = startx + i*stepdist;
-        }
-        return voxelx;
+        Histogram[] hists = {LET};        
+        return hists;
     }
     
-    // returns voxel y coordinates
-    public double [] getVoxely(double [] phantomPosition, int nbins){
-        // initialise voxel y array
-        double [] voxely = new double [nbins+1];
-        // returns start and end y values
-        double starty = phantomPosition[1];
-        double endy = phantomPosition[4];
-        // calculates step length in y
-        double stepdist = (phantomPosition[4] - phantomPosition[1])/nbins; 
-        // fills voxely array with y coords
-        for (int i = 0; i < nbins; i++){
-            voxely[i] = starty + i*stepdist;
-        }
-        return voxely;
-    }
     
-    // returns voxel z coordinates
-    public double [] getVoxelz(double [] phantomPosition, int nbins){
-        // initialise voxel z array
-        double [] voxelz = new double [nbins+1];
-        // returns start and end z values
-        double startz = phantomPosition[2];
-        double endz = phantomPosition[5];
-        // calculates step length in z
-        double stepdist = (phantomPosition[5] - phantomPosition[2])/nbins; 
-        // fills voxelz array with z coords
-        for (int i = 0; i < nbins; i++){
-            voxelz[i] = startz + i*stepdist;
+    public void writeLET(int ke, String var)
+    {
+        String filename = var+".csv";
+        PrintWriter outputFile;
+        try {
+            outputFile = new PrintWriter(filename);
+        } catch (IOException e) {
+            System.err.println("Failed to open file " + filename + ". Histogram data was not saved.");
+            return;
         }
-        return voxelz;
+
+        // now make a loop to write the contents of each bin to disk, one number at a time
+        // together with the x-coordinate of the centre of each bin.
+        for (int n = 0; n < nbins; n++) {
+            // comma separated values
+            outputFile.println(n + "," + binCentre[n] + "," + getLET(ke, n));
+        }
+        outputFile.close(); // close the output file
+        System.out.println(filename+" written!");
     }
  
+
+    
+    
+    
 //// Calculating RBE for Different Models ///////////////////////////////////////////////////////////////////////////////////////////////////////////// 
     
 // CASE 1 - RBE = 1.1
@@ -245,8 +294,84 @@ public double [][][] LET(double x, double y, double z, int nbins, int numberOfEv
             }
         }
         
+        }
+        
+    
+    public double [] getPhantomStart(double [] phantomPosition) {
+           double [] start = Arrays.copyOfRange(phantomPosition, 0, 2); 
+           return start;
+    }
+
+    public double [] getPhantomEnd(double [] phantomPosition) {
+            double [] end = Arrays.copyOfRange(phantomPosition, 3, 5);
+           return end;
+    }
+
+    // returns energy lost by single particle in said voxel
+    public double finddE (double [] EnergyLossArray) {
+        double totalEloss = 0;
+        // summing all elements in array
+        for (int i = 0; i < EnergyLossArray.length; i++) {
+            totalEloss += EnergyLossArray[i];
+        }
+        return totalEloss;
+    }
+
+    // returns total distance travelled by particle
+    public double findTrackLength(double [] stepsize) {
+        double totalTrackLength = 0;
+        // summing all elements in array
+        for (int i = 0; i < stepsize.length; i++) {
+            totalTrackLength += stepsize[i];
+        }
+        return totalTrackLength;  
+    }    
+
+        // returns voxel x coordinates
+    public double [] getVoxelx(double [] phantomPosition, int nbins){
+        // initialise voxel x array
+        double [] voxelx = new double [nbins+1];
+        // returns start and end x values
+        double startx = phantomPosition[0];
+        double endx = phantomPosition[3];
+        // calculates step length in x
+        double stepdist = (phantomPosition[3] - phantomPosition[0])/nbins; 
+        // fills voxelx array with x coords
+        for (int i = 0; i < nbins; i++){
+            voxelx[i] = startx + i*stepdist;
+        }
+        return voxelx;
     }
     
+    // returns voxel y coordinates
+    public double [] getVoxely(double [] phantomPosition, int nbins){
+        // initialise voxel y array
+        double [] voxely = new double [nbins+1];
+        // returns start and end y values
+        double starty = phantomPosition[1];
+        double endy = phantomPosition[4];
+        // calculates step length in y
+        double stepdist = (phantomPosition[4] - phantomPosition[1])/nbins; 
+        // fills voxely array with y coords
+        for (int i = 0; i < nbins; i++){
+            voxely[i] = starty + i*stepdist;
+        }
+        return voxely;
+    }
     
+    // returns voxel z coordinates
+    public double [] getVoxelz(double [] phantomPosition, int nbins){
+        // initialise voxel z array
+        double [] voxelz = new double [nbins+1];
+        // returns start and end z values
+        double startz = phantomPosition[2];
+        double endz = phantomPosition[5];
+        // calculates step length in z
+        double stepdist = (phantomPosition[5] - phantomPosition[2])/nbins; 
+        // fills voxelz array with z coords
+        for (int i = 0; i < nbins; i++){
+            voxelz[i] = startz + i*stepdist;
+        }
+        return voxelz;
+    }
 }
-

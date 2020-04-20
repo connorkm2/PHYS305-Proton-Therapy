@@ -56,6 +56,7 @@ class ProtonTherapy extends Parameters
         Histogram hist_det_theta_zy = new Histogram(Nb, -0.2, 0.2, "detector theta z-y");
         
         
+        
         // Define the genotrical properties of the experiment in method SetupExperiment()
         Geometry Experiment = SetupExperiment();
                 
@@ -205,6 +206,8 @@ class ProtonTherapy extends Parameters
         hist_det_theta_zy.writeToDisk("det_theta_zy.csv");
         
         Experiment.writeEnergyHist(0.3,"energy_hist.csv");
+        
+
 
     }
 

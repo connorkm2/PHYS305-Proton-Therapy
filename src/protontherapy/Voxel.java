@@ -29,11 +29,6 @@ class Voxel extends Parameters
     //DVH info
     private int DVHnbins;
     private double[][] DVHvalues;
-    
-    // voxel coords arrays
-    private double [] voxelx;
-    private double [] voxely;
-    private double [] voxelz;
 
     // constructor for the class Histogram
     public Voxel(int numberOfBins, double [] start, double [] end, String name, boolean plotBraggPeaks)
