@@ -39,13 +39,14 @@ public class ParticleTracker
         Particle lastStep = new Particle(output);
         
         double [] EnergyLossArray = new double [steps];
+        double [] distance = new double [steps];
+        double [] stepsize;
         
-
         int lastVolume = Experiment.getVolume(output);
 
         for(int n = 0; n < steps; n++){
             
-            double [] stepsize;
+            
             // propagate particle in steps
             if (useRK4) {
                 propogateParticleRK4(dt); // Runge-Kutta 4th order integrator
@@ -72,6 +73,7 @@ public class ParticleTracker
             if (output.E() > output.mass()) {
                 // stores energy loss at each step in array (returns dE)
                 EnergyLossArray[n] = Experiment.doEloss(output, output.distance(lastStep), ke);
+                distance[n] = output.distance(lastStep);
 
             }
             
@@ -106,13 +108,13 @@ public class ParticleTracker
             lastStep.setState(output);
             
             // get step array
-            Track track = new Track(input.mass(), steps+1);
-            stepsize = track.findStepSize(n, steps);
+            //Track track = new Track(input.mass(), steps+1);
+            //stepsize[n] = storeTrack.findStepSize(n);
     
         }
 
         // return the final, propagated particle ***
-        return new Pair(output, EnergyLossArray, stepsize);
+        return new Pair(output, EnergyLossArray, distance);
     }
 
     public Track getTrack()

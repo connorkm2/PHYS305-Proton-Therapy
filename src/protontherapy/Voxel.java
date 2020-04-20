@@ -7,13 +7,13 @@ import java.util.Arrays;
 /// this import is needed for the file input/output functionality
 import java.io.*;
 
-class Voxel extends RBE 
+class Voxel extends Parameters 
 { 
     private boolean plotPP;
     private double [] binlow, binhigh;
     private double [] binwidth;
     // changed from private 
-    public int nbins;
+    private int nbins;
     private double[][] binCentre;
     private String histname;
 

@@ -82,7 +82,8 @@ class ProtonTherapy extends Parameters
                 // initialise energylossarray
                 
                 double [] EnergyLossArray;
-                double [] stepsize;
+                double [] distance;
+                
 
                 // simulate propagation of each generated particle,
                 // store output in Particles_sim and Tracks_sim
@@ -104,7 +105,7 @@ class ProtonTherapy extends Parameters
                     
                     EnergyLossArray = pair_new.getEnergyLossArray();
                     
-                    stepsize = pair_new.getStepsize();
+                    distance = pair_new.getStepsize();
 
 //                     System.out.println("Output particle");
 //                     Particles_sim[ip].print();
@@ -112,13 +113,15 @@ class ProtonTherapy extends Parameters
                     // save the full simulated track for later analysis
                     Tracks_sim[ip] = tracker.getTrack();
 
-
                     // write scatter plot for event 0, particle 0 to disk into file "output_particle.csv"
                     if (nev == 0 && ip == 0) {
                         //Tracks_sim[ip].writeToDisk("output_particle.csv");
+                        
                     }
                 }
                 // end of simulated particle propagation
+                
+                // loop over particles here
                 
                 // simulate detection of each particle in each element from the simulated tracks
                 // this is just for dumping the simulation to the screen
