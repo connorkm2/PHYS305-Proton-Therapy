@@ -141,10 +141,10 @@ public class RBE extends Parameters {
     
 
     // creates histogram of LET energies
-    public Histogram [] LET(double [] EnergyLossArray, double [] distance){
-        String filename = "LETHist.csv";
+    public Histogram [] LET(double [] EnergyLossArray, double [] distance, String filename){
         Histogram LET = new Histogram(DVHnbins, 0, 150, "LET");
         
+        // calculating LET for each particle 
         double totalEloss = finddE(EnergyLossArray);
         double dist = findTrackLength(distance);
         double dE_dz = totalEloss/dist;
