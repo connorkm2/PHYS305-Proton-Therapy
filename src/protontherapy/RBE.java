@@ -28,6 +28,7 @@ public class RBE extends Parameters {
     // initialisng arrays to store dE and dz for each voxel.
     double [][][] dE = new double [nbins][nbins][nbins];
     double [][][] dEdz = new double [nbins][nbins][nbins];
+
     
     
     //DVH info
@@ -104,16 +105,38 @@ public class RBE extends Parameters {
         return (binwidth[0]*binwidth[1]*binwidth[2]);
     }
     
-    // returns data from LET hist
-    public double [] getLET(int ke, int nbin)
-    {
-        // returns the contents on bin 'nbin' to the user
-        return LET[ke][nbin];
+                // returns energy lost by single particle in said voxel
+    public double finddE (double [] EnergyLossArray) {
+        double totalEloss = 0;
+        // summing all elements in array
+        for (int i = 0; i < EnergyLossArray.length; i++) {
+            totalEloss += EnergyLossArray[i];
+        }
+        return totalEloss;
     }
 
-    // need to modify this for calculating LET 
+    // returns total distance travelled by particle
+    public double findTrackLength(double [] stepsize) {
+        double totalTrackLength = 0;
+        // summing all elements in array
+        for (int i = 0; i < stepsize.length; i++) {
+            totalTrackLength += stepsize[i];
+        }
+        return totalTrackLength;  
+}
+    
+    // returns data from LET hist
+    public double getContent(int zBin, int xBin, int yBin)
+    {
+        // returns the contents on bin 'nbin' to the user
+        return voxels[zBin][xBin][yBin];
+    }
+    
+
+    // fills voxels with values
     public void fill(double LETParticle, Particle p, int ke){
     //fillVoxels(energy, p);
+    voxels = new double[nbins][nbins][nbins];
 
     int xBin = (int) ((p.x - binlow[0])/binwidth[0]);
     int yBin = (int) ((p.y - binlow[1])/binwidth[1]);
@@ -124,9 +147,10 @@ public class RBE extends Parameters {
     }else if(p.x > binhigh[0] || p.y > binhigh[1] || p.z > binhigh[2]){
         overflow++;
     }else{
-        LET[zBin][xBin][yBin] = LET[zBin][xBin][yBin] + LETParticle;
+        voxels[zBin][xBin][yBin] = voxels[zBin][xBin][yBin] + LETParticle;
     }
     }
+    
     
     // ***how do I reference this directly from voxel class?
         // checks if particle is in tumour
@@ -179,18 +203,19 @@ public class RBE extends Parameters {
 
         // now make a loop to write the contents of each bin to disk, one number at a time
         // together with the x-coordinate of the centre of each bin.
-        for (int n = 0; n < nbins; n++) {
+        for(int zi = 0; zi<nbins; zi++){
+            for(int xi = 0; xi<nbins;xi++){
+                for(int yi = 0; yi<nbins;yi++){
             // comma separated values
-            outputFile.println(n + "," + binCentre[n] + "," + getLET(ke, n));
+            outputFile.println(zi + "," + binCentre[zi] + "," + getContent(zi, xi, yi));
+        }
+        }
         }
         outputFile.close(); // close the output file
         System.out.println(filename+" written!");
     }
  
 
-    
-    
-    
 //// Calculating RBE for Different Models ///////////////////////////////////////////////////////////////////////////////////////////////////////////// 
     
 // CASE 1 - RBE = 1.1
@@ -202,7 +227,7 @@ public class RBE extends Parameters {
         return simpleRBEweight;
     }
     
-    // returns RBE weighted dose histogram
+    // returns RBE weighted dose histogram for case 1
     public Histogram [] simpleRBEHist(int ke, int nbin, double [] EnergyLossArray) {
         Histogram simpleRBE = new Histogram(DVHnbins, 0, 150, "Simple RBE");
         
@@ -221,174 +246,192 @@ public class RBE extends Parameters {
         }
         Histogram[] hists = {simpleRBE};        
         return hists;
-        
 
-        
     }
     
-// CURRENTLY ALL METHODS BELOW ARE VOID - NEED TO WORK OUT HOW TO INCLUDE FILL FUNCTION
+        public void writeSimpleRBE(int ke, String filename)
+    {
+        filename = filename+".csv";
+        PrintWriter outputFile;
+        try {
+            outputFile = new PrintWriter(filename);
+        } catch (IOException e) {
+            System.err.println("Failed to open file " + filename + ". Histogram data was not saved.");
+            return;
+        }
+
+        // now make a loop to write the contents of each bin to disk, one number at a time
+        // together with the x-coordinate of the centre of each bin.
+        for(int zi = 0; zi<nbins; zi++){
+            for(int xi = 0; xi<nbins;xi++){
+                for(int yi = 0; yi<nbins;yi++){ 
+            // comma separated values
+            outputFile.println(zi + "," + binCentre[zi] + "," + getContent(zi, xi, yi));
+        }
+        }
+        }
+        outputFile.close(); // close the output file
+        System.out.println(filename+" written!");
+    }
+    
+
 // CASE 2 - CARABE-FERNANDEZ MODEL
     
-    // calculates RBE max and associated weighted dose
-    public void CarFerRBEmax(double [][][] dE, double [][][] LET, double alpha_beta, int nbins) {
-        // initialising arrays
-        double [][][] RBEmax = new double [nbins][nbins][nbins];
-        double [][][] maxCarFerRBEWeight = new double [nbins][nbins][nbins];
+    // returns CF RBE max
+    public double [] getCarFerRBEmax(double alpha_beta, int ke, int nbin) {
+        // get LET information from LET histogram
+        double [] LET = new double [nbins];
+        LET = getLET(ke, nbin);
         
-        // for voxels in z
-        for (int i = 0; i < nbins; i++){
-            // for voxels in x
-            for (int j = 0; j < nbins; j++) {
-                // for voxels in y
-                for (int k = 0; k < nbins; k++) {
-                RBEmax[i][j][k] = 0.834 + 0.154*(2.686/(alpha_beta))*LET[i][j][k];
-                maxCarFerRBEWeight[i][j][k] = RBEmax[i][j][k]*dE[i][j][k];
-    }
-            }
-        }
-        
+        // calculate RBEmax for each bin using LET
+        double [] CarFerRBEmax = new double [nbins];
+        for (int n = 0; n < nbins; n++)
+            CarFerRBEmax[n] = 0.834 + (0.154*(2.686/(alpha_beta))*LET[n]);
+
+        return CarFerRBEmax;
     }
     
-    // calculates RBE min and associated weighted dose
-    public void CarFerRBEmin(double [][][] dE, double [][][] LET, double alpha_beta, int nbins) {
-        // initialising arrays
-        double [][][] RBEmin = new double [nbins][nbins][nbins];
-        double [][][] minCarFerRBEWeight = new double [nbins][nbins][nbins];
-        // for voxels in z
-        for (int i = 0; i < nbins; i++){
-            // for voxels in x
-            for (int j = 0; j < nbins; j++) {
-                // for voxels in y
-                for (int k = 0; k < nbins; k++) {
-                RBEmin[i][j][k] = 0.834 + 0.154*(2.686/(alpha_beta))*LET[i][j][k];
-                minCarFerRBEWeight[i][j][k] = RBEmin[i][j][k]*dE[i][j][k];
+    // returns CF RBE min
+    public double [] getCarFerRBEmin(double alpha_beta, int ke, int nbin) {
+        // get LET information from LET histogram
+        double [] LET = new double [nbins];
+        LET = getLET(ke, nbin);
+
+        // calculate RBEmax for each bin using LET
+        double [] CarFerRBEmin = new double [nbins];
+        for (int n = 0; n < nbins; n++)
+            CarFerRBEmin[n] = 1.09 + 0.006*(2.686/(alpha_beta))*LET[n];
+
+        return CarFerRBEmin;
+    }
+    
+        // returns RBE weighted dose histogram for case 1 max
+    public Histogram [] CarFerMinHist(int ke, int nbin, double [] EnergyLossArray) {
+        Histogram CarFerMinHist = new Histogram(DVHnbins, 0, 150, "Carabe-Fernandez Min");
         
+        double totalEloss = finddE(EnergyLossArray);
+        double [] CarFerRBE = getCarFerRBEmin(alpha_beta, ke, nbins);
+        
+        for(int zi = 0; zi<nbins; zi++){
+            for(int xi = 0; xi<nbins;xi++){
+                for(int yi = 0; yi<nbins;yi++){
+                    // if particle is in tumour volume, fill LET hist
+                    if(isInSphere(xi,yi,zi)){
+                        // weight dose based on RBE of z bin and fill array
+                        double CarFerRBEweight = CarFerRBE[zi]*totalEloss;
+                        CarFerMinHist.fill(CarFerRBEweight);
+                    }
                 }
             }
         }
-        
-    }
-   
+        Histogram[] hists = {CarFerMinHist};        
+        return hists;
 
+    }
+    
+        // returns RBE weighted dose histogram for case 1 min
+        public Histogram [] CarFerMaxHist(int ke, int nbin, double [] EnergyLossArray) {
+        Histogram CarFerMaxHist = new Histogram(DVHnbins, 0, 150, "Carabe-Fernandez Max");
+        
+        double totalEloss = finddE(EnergyLossArray);
+        double [] CarFerRBE = getCarFerRBEmax(alpha_beta, ke, nbins);
+        
+        for(int zi = 0; zi<nbins; zi++){
+            for(int xi = 0; xi<nbins;xi++){
+                for(int yi = 0; yi<nbins;yi++){
+                    // if particle is in tumour volume, fill LET hist
+                    if(isInSphere(xi,yi,zi)){
+                        // weight dose based on RBE of z bin and fill array
+                        double CarFerRBEweight = CarFerRBE[zi]*totalEloss;
+                        CarFerMaxHist.fill(CarFerRBEweight);
+                    }
+                }
+            }
+        }
+        Histogram[] hists = {CarFerMaxHist};        
+        return hists;
+
+    }
+        
+
+    
         
     // CASE 3 - WEDENBERG MODEL
-    
-    public void WendelRBEmin(double [][][] dE, double [][][] LET, double alpha_beta, int nbins, double RBEmin) {
-        // initialising arrays
-        double [][][] minWendelRBEWeight = new double [nbins][nbins][nbins];
-        // for voxels in z
-        for (int i = 0; i < nbins; i++){
-            // for voxels in x
-            for (int j = 0; j < nbins; j++) {
-                // for voxels in y
-                for (int k = 0; k < nbins; k++) {
-                minWendelRBEWeight[i][j][k] = RBEmin*dE[i][j][k];
         
+    public double [] getWedenRBEmax(double alpha_beta, int ke, int nbin) {
+        // get LET information from LET histogram
+        double [] LET = new double [nbins];
+        LET = getLET(ke, nbin);
+        
+        // calculate RBEmax for each bin using LET
+        double [] WedenRBEmax = new double [nbins];
+        for (int n = 0; n < nbins; n++)
+            WedenRBEmax[n] = 1.00 + (0.434/(alpha_beta))*LET[n];
+
+        return WedenRBEmax;
+    }
+    
+    // returns CF RBE min
+    public double getWedenRBEmin(double totalEloss) {
+                double RBE = 1.0;
+                double WedenRBEmin = RBE*totalEloss;      
+        return WedenRBEmin;
+    }
+        
+    // returns RBE weighted dose histogram for CASE 3 MIN
+    public Histogram [] WedenMinHist(int ke, int nbin, double [] EnergyLossArray) {
+        Histogram WedenMinHist = new Histogram(DVHnbins, 0, 150, "Wedenberg Min");
+        
+        double totalEloss = finddE(EnergyLossArray);
+        // returns RBE weighted energy
+        double WedenRBEmin = getWedenRBEmin(totalEloss);
+        
+        for(int zi = 0; zi<nbins; zi++){
+            for(int xi = 0; xi<nbins;xi++){
+                for(int yi = 0; yi<nbins;yi++){
+                    // if particle is in tumour volume, fill LET hist
+                    if(isInSphere(xi,yi,zi)){
+                        WedenMinHist.fill(WedenRBEmin);
+                    }
                 }
             }
         }
-        
-    }
+        Histogram[] hists = {WedenMinHist};        
+        return hists;
 
-        public void WendelRBEmax(double [][][] dE, double [][][] LET, double alpha_beta, int nbins) {
-        // initialising arrays
-        double [][][] maxWendelRBEWeight = new double [nbins][nbins][nbins];
-        double [][][] RBEmax = new double [nbins][nbins][nbins];
-        // for voxels in z
-        for (int i = 0; i < nbins; i++){
-            // for voxels in x
-            for (int j = 0; j < nbins; j++) {
-                // for voxels in y
-                for (int k = 0; k < nbins; k++) {
-                RBEmax[i][j][k] = 1.00 + (0.434/(alpha_beta))*LET[i][j][k];
-                maxWendelRBEWeight[i][j][k] = RBEmax[i][j][k]*dE[i][j][k];
+    }
+    
+        // returns RBE weighted dose histogram for CASE 3 MAX
+        public Histogram [] WedenMaxHist(int ke, int nbin, double [] EnergyLossArray) {
+        Histogram WedenMaxHist = new Histogram(DVHnbins, 0, 150, "Wedenberg Max");
         
+        double totalEloss = finddE(EnergyLossArray);
+        double [] WedenRBE = getWedenRBEmax(alpha_beta, ke, nbins);
+        
+        for(int zi = 0; zi<nbins; zi++){
+            for(int xi = 0; xi<nbins;xi++){
+                for(int yi = 0; yi<nbins;yi++){
+                    // if particle is in tumour volume, fill LET hist
+                    if(isInSphere(xi,yi,zi)){
+                        // weight dose based on RBE of z bin and fill array
+                        double WedenRBEweight = WedenRBE[zi]*totalEloss;
+                        WedenMaxHist.fill(WedenRBEweight);
+                    }
                 }
             }
         }
-        
-        }
-        
-            // returns energy lost by single particle in said voxel
-    public double finddE (double [] EnergyLossArray) {
-        double totalEloss = 0;
-        // summing all elements in array
-        for (int i = 0; i < EnergyLossArray.length; i++) {
-            totalEloss += EnergyLossArray[i];
-        }
-        return totalEloss;
-    }
+        Histogram[] hists = {WedenMaxHist};        
+        return hists;
 
-    // returns total distance travelled by particle
-    public double findTrackLength(double [] stepsize) {
-        double totalTrackLength = 0;
-        // summing all elements in array
-        for (int i = 0; i < stepsize.length; i++) {
-            totalTrackLength += stepsize[i];
-        }
-        return totalTrackLength;  
-}
+    }   
+        
+        
+    
+
+        
+    
+        
 }
         
     
-//    public double [] getPhantomStart(double [] phantomPosition) {
-//           double [] start = Arrays.copyOfRange(phantomPosition, 0, 2); 
-//           return start;
-//    }
-//
-//    public double [] getPhantomEnd(double [] phantomPosition) {
-//            double [] end = Arrays.copyOfRange(phantomPosition, 3, 5);
-//           return end;
-//    }
-//
 
-//    }    
-//
-//        // returns voxel x coordinates
-//    public double [] getVoxelx(double [] phantomPosition, int nbins){
-//        // initialise voxel x array
-//        double [] voxelx = new double [nbins+1];
-//        // returns start and end x values
-//        double startx = phantomPosition[0];
-//        double endx = phantomPosition[3];
-//        // calculates step length in x
-//        double stepdist = (phantomPosition[3] - phantomPosition[0])/nbins; 
-//        // fills voxelx array with x coords
-//        for (int i = 0; i < nbins; i++){
-//            voxelx[i] = startx + i*stepdist;
-//        }
-//        return voxelx;
-//    }
-//    
-//    // returns voxel y coordinates
-//    public double [] getVoxely(double [] phantomPosition, int nbins){
-//        // initialise voxel y array
-//        double [] voxely = new double [nbins+1];
-//        // returns start and end y values
-//        double starty = phantomPosition[1];
-//        double endy = phantomPosition[4];
-//        // calculates step length in y
-//        double stepdist = (phantomPosition[4] - phantomPosition[1])/nbins; 
-//        // fills voxely array with y coords
-//        for (int i = 0; i < nbins; i++){
-//            voxely[i] = starty + i*stepdist;
-//        }
-//        return voxely;
-//    }
-//    
-//    // returns voxel z coordinates
-//    public double [] getVoxelz(double [] phantomPosition, int nbins){
-//        // initialise voxel z array
-//        double [] voxelz = new double [nbins+1];
-//        // returns start and end z values
-//        double startz = phantomPosition[2];
-//        double endz = phantomPosition[5];
-//        // calculates step length in z
-//        double stepdist = (phantomPosition[5] - phantomPosition[2])/nbins; 
-//        // fills voxelz array with z coords
-//        for (int i = 0; i < nbins; i++){
-//            voxelz[i] = startz + i*stepdist;
-//        }
-//        return voxelz;
-//    }
-//}
