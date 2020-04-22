@@ -13,6 +13,12 @@ package protontherapy;
 // class to input SOBP parameters, as well as calculate NTCP and TCP
 public class Parameters {
     
+    public double refDose = 2.5;    // Gy
+    public double rhoChi = 10000000;     // cm^-3
+    public double nFractions = 25;   
+    public double alpha = 0.26;     // Gy^-1
+    public double alpha_beta = 10;  // Gy
+    
     public static double tumourDepthInPatient = 7; // cm // depth to center of tumour
     public static double[] tumourDimensions = {3,3,14}; //w,h,d [cm]
     
@@ -20,6 +26,24 @@ public class Parameters {
                                                0.2, 0.2, 0.72};     //x1,y1,z1 [m]
     public static final double[] scatererPosition = {-0.20, -0.20, 0.01,    //x0,y0,z0 [m]
                                                     0.20, 0.20, 0.02};   //x1,y1,z1 [m]
+    
+    public double getTCP(double[] DVH, double v){
+        double d;
+        double Nsum = 0;
+        double[] N = new double[DVH.length];
+        for(int i = 0; i < DVH.length; i++){
+            d = ((double)i/100)*refDose;
+            N[i] = DVH[i]*(v*1000000)*rhoChi*Math.exp((-nFractions*alpha*d)
+                    *(1+(d/alpha_beta)));
+            System.out.println("dog");
+            System.out.println(rhoChi);
+            System.out.println(N[i]);
+            System.out.println(DVH[i]);
+            Nsum += N[i];
+        }
+        System.out.println(Nsum);
+        return Math.exp(-Nsum);
+    }
     
     
 //NTCP [Normal Tissue Complications Probability] and TCP [Tumour Control Probability] calculation method
