@@ -58,8 +58,6 @@ public class RBE extends Parameters {
         
         voxels = new double [nbins][nbins][nbins];
         LET = new double [nbins][nbins][nbins];
-        dE = new double [nbins][nbins][nbins];
-        dEdz = new double [nbins][nbins][nbins];
                 
         // calculate the centre of each bin for all dimensions
         binCentre = new double[3][nbins];
@@ -105,7 +103,7 @@ public class RBE extends Parameters {
         return (binwidth[0]*binwidth[1]*binwidth[2]);
     }
     
-                // returns energy lost by single particle in said voxel
+    // returns energy lost by single particle in said voxel
     public double finddE (double [] EnergyLossArray) {
         double totalEloss = 0;
         // summing all elements in array
@@ -125,11 +123,16 @@ public class RBE extends Parameters {
         return totalTrackLength;  
 }
     
-    // returns data from LET hist
-    public double getContent(int zBin, int xBin, int yBin)
+    // returns data from voxels (e.g 3D version)
+    public double getVoxelContent(int zBin, int xBin, int yBin)
     {
         // returns the contents on bin 'nbin' to the user
         return voxels[zBin][xBin][yBin];
+    }
+    
+    // returns data from LET histogram
+    public double [] getLET(int ke, int nbin) {
+        return LET[ke][nbin];
     }
     
 
@@ -207,7 +210,7 @@ public class RBE extends Parameters {
             for(int xi = 0; xi<nbins;xi++){
                 for(int yi = 0; yi<nbins;yi++){
             // comma separated values
-            outputFile.println(zi + "," + binCentre[zi] + "," + getContent(zi, xi, yi));
+            outputFile.println(zi + "," + binCentre[zi] + "," + getVoxelContent(zi, xi, yi));
         }
         }
         }
@@ -249,6 +252,7 @@ public class RBE extends Parameters {
 
     }
     
+        // writes simple RBE in 3D (e.g in terms of voxels?)
         public void writeSimpleRBE(int ke, String filename)
     {
         filename = filename+".csv";
@@ -266,7 +270,7 @@ public class RBE extends Parameters {
             for(int xi = 0; xi<nbins;xi++){
                 for(int yi = 0; yi<nbins;yi++){ 
             // comma separated values
-            outputFile.println(zi + "," + binCentre[zi] + "," + getContent(zi, xi, yi));
+            outputFile.println(zi + "," + binCentre[zi] + "," + getVoxelContent(zi, xi, yi));
         }
         }
         }
@@ -291,7 +295,7 @@ public class RBE extends Parameters {
         return CarFerRBEmax;
     }
     
-    // returns CF RBE min
+    // returns CF RBE min as an array of values for each value of LET.
     public double [] getCarFerRBEmin(double alpha_beta, int ke, int nbin) {
         // get LET information from LET histogram
         double [] LET = new double [nbins];
@@ -305,7 +309,7 @@ public class RBE extends Parameters {
         return CarFerRBEmin;
     }
     
-        // returns RBE weighted dose histogram for case 1 max
+    // returns RBE weighted dose histogram for case 1 max - fills 3D hist (CHECK THIS?)
     public Histogram [] CarFerMinHist(int ke, int nbin, double [] EnergyLossArray) {
         Histogram CarFerMinHist = new Histogram(DVHnbins, 0, 150, "Carabe-Fernandez Min");
         
@@ -329,8 +333,8 @@ public class RBE extends Parameters {
 
     }
     
-        // returns RBE weighted dose histogram for case 1 min
-        public Histogram [] CarFerMaxHist(int ke, int nbin, double [] EnergyLossArray) {
+    // returns RBE weighted dose histogram for case 1 min f
+    public Histogram [] CarFerMaxHist(int ke, int nbin, double [] EnergyLossArray) {
         Histogram CarFerMaxHist = new Histogram(DVHnbins, 0, 150, "Carabe-Fernandez Max");
         
         double totalEloss = finddE(EnergyLossArray);

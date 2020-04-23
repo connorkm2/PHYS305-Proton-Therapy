@@ -302,8 +302,11 @@ class Geometry
     public void writeEnergyHist(double depth, String filename){
         //voxels.writeToDisk(filename);
         voxels.writeData(depth, filename);
-        
-        
+    }
+    
+    // writes all data from RBE functions
+    public void writeRBEdata(String var, Particle p, double dist, int beamWeight, double [] stepsize, Geometry Experiment){
+        voxels.writeLET(var, p, dist, beamWeight, stepsize, Experiment);
     }
     
     public void doMultScatter(Particle p, double dist)

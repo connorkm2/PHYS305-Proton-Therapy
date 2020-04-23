@@ -206,6 +206,8 @@ class ProtonTherapy extends Parameters
         hist_det_theta_zy.writeToDisk("det_theta_zy.csv");
         
         Experiment.writeEnergyHist(0.3,"energy_hist.csv");
+        Experiment.writeRBEdata("RBE", p, dist, ke, distance, Experiment);
+
         
 
 

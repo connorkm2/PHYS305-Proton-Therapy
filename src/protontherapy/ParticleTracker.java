@@ -2,7 +2,7 @@ package protontherapy;
 
 // Contains Euler and Runge-Kutte 4th order integrator methods
 
-public class ParticleTracker 
+public class ParticleTracker
 {
     private double dt;
     private int steps;
@@ -107,9 +107,7 @@ public class ParticleTracker
             // save last state
             lastStep.setState(output);
             
-            // get step array
-            //Track track = new Track(input.mass(), steps+1);
-            //stepsize[n] = storeTrack.findStepSize(n);
+            //RBE.writeLET(ke, "LET");
     
         }
 

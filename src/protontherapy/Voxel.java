@@ -29,6 +29,7 @@ class Voxel extends Parameters
     //DVH info
     private int DVHnbins;
     private double[][] DVHvalues;
+    
 
     // constructor for the class Histogram
     public Voxel(int numberOfBins, double [] start, double [] end, String name, boolean plotBraggPeaks)
@@ -101,6 +102,9 @@ class Voxel extends Parameters
         return (binwidth[0]*binwidth[1]*binwidth[2]);
     }
     
+    public double getContent(int zBin, int xBin, int yBin) {
+        return voxels[zBin][xBin][yBin];
+    }
 
     
 
@@ -131,37 +135,75 @@ class Voxel extends Parameters
     }
     
     // calculates absorbed dose for each Zslice
-    public double [] getAbsorbedDose(double [][][] voxels, 
-                                    double x0, double y0, double z0,
-                                    double x1, double y1, double z1, 
-                                    double rhoin) {
-        // initialising energy slice array
-        double [][] total_energy = new double [2][nbins];
-        // calculates volume of each voxel
-        double voxelVolume = (x1 - x0)/nbins * (y1 - y0)/nbins * (z1 - z0)/nbins;
-        // calculates voxel mass
-        double voxelMass = rhoin*voxelVolume;
-        // initialises absorbed dose array
-        double [] AbsorbedDose = new double [nbins];
+
+    
+    // Cara RBE class merge ////////////////////////////////////////////////////////////////////////////////////////////
+    
+    // maybe put this method in Geometry?
+    // returns total distance travelled by particle
+    public double findTrackLength(double [] stepsize) {
+        double totalTrackLength = 0;
+        // summing all elements in array
+        for (int i = 0; i < stepsize.length; i++) {
+            totalTrackLength += stepsize[i];
+        }
+        return totalTrackLength;  
+}
+    // calculates LET fills voxels
+    public double [][][] getLET(Geometry Experiment, Particle p, double dist, int beamWeight, double [] stepsize){
         
-        // for z slices
-        for (int i = 0; i < nbins; i++){
-            // for voxels in x
-            for (int j = 0; j < nbins; j++) {
-            // for voxels in y
-                for (int k = 0; k < nbins; k++) {
-                // summing x and y energy deposited in each z slice
-                total_energy[0][i] += voxels[i][j][k];
+        // initialising LET Array
+        double [][][] LET = new double [nbins][nbins][nbins];
+
+        // calculating LET for each particle 
+        // how to call doELoss from Geometry Class? - or just command this to happen in geometry class?
+        double totalEloss = Experiment.doEloss(p, dist, beamWeight);
+        double distance = findTrackLength(stepsize);
+        double LETParticle = totalEloss/distance;
+
+        for(int zi = 0; zi<nbins; zi++){
+            for(int xi = 0; xi<nbins;xi++){
+                for(int yi = 0; yi<nbins;yi++){
+                    // if particle is in tumour volume, fill LET hist
+                    if(isInSphere(xi,yi,zi)){
+                        LET[zi][xi][yi] = LET[zi][xi][yi] + LETParticle;
+                    }
                 }
-                }
-            // total energy absorbed in slice / total slice mass
-            AbsorbedDose[i] = total_energy[0][i]/(voxelMass*Math.pow(nbins, 2));
-            
             }
-        return AbsorbedDose;
         }   
+    return LET;
+}
     
+        public void writeLET(String var, Particle p, double dist, int beamWeight, double [] stepsize, Geometry Experiment)
+    {
+        // calculate LET
+        double [][][] LET = getLET(Experiment, p, dist, beamWeight, stepsize);
+        
+        String filename = var+".csv";
+        PrintWriter outputFile;
+        try {
+            outputFile = new PrintWriter(filename);
+        } catch (IOException e) {
+            System.err.println("Failed to open file " + filename + ". Histogram data was not saved.");
+            return;
+        }
+
+        double value = 0;
+        for(int zi = 0; zi<nbins; zi++){
+            for(int xi = 0; xi<nbins;xi++){
+                for(int yi = 0; yi<nbins;yi++){
+                    // sums LET along z axis 
+                value += LET[zi][xi][yi];
+            // comma separated values
+            outputFile.println(zi + "," + binCentre[zi] + "," + value);
+        }
+        }
+        }
+        outputFile.close(); // close the output file
+        System.out.println(filename+" written!");
+    }
     
+
 //    i : selection for x,y,z
 //    int ke: position value of energy of current itteration in main of ProtonTherapy.
     public double getSliceEnergyPP(int ke, int nbin)
@@ -420,4 +462,36 @@ class Voxel extends Parameters
         //System.out.println("TCP: "+TCP);
     }
 
+        public double [] getAbsorbedDose(double [][][] voxels, 
+                                    double x0, double y0, double z0,
+                                    double x1, double y1, double z1, 
+                                    double rhoin) {
+        // initialising energy slice array
+        double [][] total_energy = new double [2][nbins];
+        // calculates volume of each voxel
+        double voxelVolume = (x1 - x0)/nbins * (y1 - y0)/nbins * (z1 - z0)/nbins;
+        // calculates voxel mass
+        double voxelMass = rhoin*voxelVolume;
+        // initialises absorbed dose array
+        double [] AbsorbedDose = new double [nbins];
+        
+        // for z slices
+        for (int i = 0; i < nbins; i++){
+            // for voxels in x
+            for (int j = 0; j < nbins; j++) {
+            // for voxels in y
+                for (int k = 0; k < nbins; k++) {
+                // summing x and y energy deposited in each z slice
+                total_energy[0][i] += voxels[i][j][k];
+                }
+                }
+            // total energy absorbed in slice / total slice mass
+            AbsorbedDose[i] = total_energy[0][i]/(voxelMass*Math.pow(nbins, 2));
+            
+            }
+        return AbsorbedDose;
+        }   
+    
+    
+    
 }
