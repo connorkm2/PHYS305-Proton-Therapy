@@ -34,6 +34,7 @@ class Geometry
     private double [] Z;
     private double [] A;
     private String [] names;
+   
     
     private double BivGaussSigma = 6;
     private double BivGaussScale = 60;
@@ -44,6 +45,7 @@ class Geometry
     private MCS [] MultScatter;
     
     private Voxel voxels;
+    private Voxel equivalentDoseVoxels;
     
 
     private double minfeaturesize;
@@ -51,6 +53,9 @@ class Geometry
     int numScatter;
     
     int lastpos;
+    
+    public double [] EnergyLossArray;
+    public double [] distance;
 
     public Geometry(double featuresize)
     {
@@ -74,8 +79,10 @@ class Geometry
         double [] binhigh = {0.2, 0.2, 0.72};
         
 //        Set last parameter to true to output individual bragg peaks        
-        voxels = new Voxel(100, binlow, binhigh, "Z Slices", true);
-        
+        voxels = new Voxel(100, binlow, binhigh, "Z Slices", true); //absorbed dose
+        equivalentDoseVoxels= new Voxel(100, binlow, binhigh, "Z Slices", true);
+        voxels.setEnergyLossArray(EnergyLossArray);
+        voxels.setDistance(distance);
     }
 
     public int getNshapes() { return nshapes; }
@@ -85,6 +92,14 @@ class Geometry
                 *Math.exp(-0.5*((Math.pow(x*BivGaussScale, 2)/Math.pow(BivGaussSigma,2))+(Math.pow(y*BivGaussScale, 2)/Math.pow(BivGaussSigma, 2))));
         //System.out.println(zGauss);
         return zGauss*5;
+    }
+    
+    public double [] setEnergyLossArray(double [] EnergyLossArray) {
+        return EnergyLossArray;
+    }
+    
+    public double [] setDistance(double [] distance) {
+    return distance;
     }
    
 
@@ -276,37 +291,79 @@ class Geometry
     }
     
     // modified from 'void' to 'double' to return lostE
-    public double doEloss(Particle p, double dist, int beamWeight)
+    public double doEloss(Particle p, double dist, int beamWeight, String var)
     {
         int volume = getVolume(p);
         double lostE = 0;
-
+        double LET = 0;
+        double RBE;
+        // CHECK THIS
+        double alpha_beta = 2.343;
+        
         if (volume >= 1) {
-            lostE = Eloss[volume].getEnergyLoss(p)*dist;
+            // calculates LET
+            LET =Eloss[volume].getEnergyLoss(p);
+            
+            // calculate energy deposition
+            lostE = LET*dist;
+            
+            // calculate RBE using LET
+            if (var == "Case 1") {
+                RBE = 1.1;
+            }
+            
+            // CarFerRBEmax
+            if (var == "Case 2a"){
+                RBE = 0.834 + (0.154*(2.686/(alpha_beta)))*LET;
+            }
+            
+            // CarFerRBEmin
+            if (var == "Case 2b"){
+                RBE = 1.09 + 0.006*(2.686/(alpha_beta))*LET;
+            }
+            
+            // WenRBEmax
+            if (var == "Case 3a"){
+                RBE = 1.00 + (0.434/(alpha_beta))*LET;
+            }
+            
+            // WenRBEmin
+            if (var == "Case 3b"){
+                RBE = 1.0;
+            }
+            
+            // calculate weighting factor
+            //double wR = ;
+            
+            // calculate equivalent dose energy
+            
+            // reduce particle energy
             p.reduceEnergy(lostE);
             
             //System.out.println(p.momentum());
             if(isInVolume(p, 2)){
                 if(isInVolume(p, 4)){System.out.println("1");}
-//               System.out.println("Dog");
-//               System.out.println(lostE);
-//                double stdev = 0.1;
-//                double smearing = randGen.nextGaussian()*stdev;
-                voxels.fill(lostE, p, beamWeight);
+                // fill voxels with absorbed dose energy
+                voxels.fill(lostE, p, beamWeight); //absorbed dose
+                
+                // fill voxels with equivalent dose energy
+                //equivalentDoseVoxels.fill(lostE*wR, p, beamWeight); //equivalent dose
 
             }
         }
         return lostE;
     }
+    
  
     public void writeEnergyHist(double depth, String filename){
         //voxels.writeToDisk(filename);
         voxels.writeData(depth, filename);
     }
-    
+
+   
     // writes all data from RBE functions
-    public void writeRBEdata(String var, Particle p, double dist, int beamWeight, double [] stepsize, Geometry Experiment){
-        voxels.writeLET(var, p, dist, beamWeight, stepsize, Experiment);
+    public void writeRBEdata(String var, double [][][] LET){
+        voxels.writeLET(var, LET);
     }
     
     public void doMultScatter(Particle p, double dist)

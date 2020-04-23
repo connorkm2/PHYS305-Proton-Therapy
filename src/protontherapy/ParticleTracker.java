@@ -72,7 +72,7 @@ public class ParticleTracker
             // implement Energy Loss, uncomment to use
             if (output.E() > output.mass()) {
                 // stores energy loss at each step in array (returns dE)
-                EnergyLossArray[n] = Experiment.doEloss(output, output.distance(lastStep), ke);
+                EnergyLossArray[n] = Experiment.doEloss(output, output.distance(lastStep), ke, "Case 1");
                 distance[n] = output.distance(lastStep);
 
             }

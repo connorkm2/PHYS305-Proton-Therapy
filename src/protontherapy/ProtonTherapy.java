@@ -31,6 +31,9 @@ class ProtonTherapy extends Parameters
     // Energy ranges for when we add multiple energy ranges to flatten dose area
     static final double [][] energies = getEnergiesNEW(250);
     
+    double [] EnergyLossArray;
+    double [] distance;
+    
     static final double delta = 0.2; // for det hists
     static final double delta_A = 0.05; //For first 4 hists gen and sim theta
     
@@ -85,7 +88,6 @@ class ProtonTherapy extends Parameters
                 double [] EnergyLossArray;
                 double [] distance;
                 
-
                 // simulate propagation of each generated particle,
                 // store output in Particles_sim and Tracks_sim
                 Particle [] Particles_sim = new Particle[Particles_gen.length];
@@ -104,9 +106,16 @@ class ProtonTherapy extends Parameters
                     // converting from pair to particle
                     Particles_sim[ip] = pair_new.getOutput();
                     
+                    // energy loss array for single particle
                     EnergyLossArray = pair_new.getEnergyLossArray();
-                    
+                    // array of stepsizes for single particle
                     distance = pair_new.getStepsize();
+                    
+                    // once array is finalised
+                    if (ip == Particles_gen.length) {
+                        Experiment.setEnergyLossArray(EnergyLossArray);
+                        Experiment.setDistance(distance);
+                    }
 
 //                     System.out.println("Output particle");
 //                     Particles_sim[ip].print();
@@ -120,6 +129,7 @@ class ProtonTherapy extends Parameters
                         
                     }
                 }
+
                 // end of simulated particle propagation
                 
                 // loop over particles here
@@ -206,12 +216,11 @@ class ProtonTherapy extends Parameters
         hist_det_theta_zy.writeToDisk("det_theta_zy.csv");
         
         Experiment.writeEnergyHist(0.3,"energy_hist.csv");
-        Experiment.writeRBEdata("RBE", p, dist, ke, distance, Experiment);
-
-        
-
+ 
+        //Experiment.writeRBEdata("RBE", LET);
 
     }
+    
 
     public static Geometry SetupExperiment ()
     {

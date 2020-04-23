@@ -30,6 +30,9 @@ class Voxel extends Parameters
     private int DVHnbins;
     private double[][] DVHvalues;
     
+    private double [] EnergyLossArrayfinal;
+    private double [] distancefinal;
+    
 
     // constructor for the class Histogram
     public Voxel(int numberOfBins, double [] start, double [] end, String name, boolean plotBraggPeaks)
@@ -70,6 +73,11 @@ class Voxel extends Parameters
         DVHvalues = new double[2][DVHnbins];
         
         System.out.println(Arrays.deepToString(binCentre));
+        
+        // *******************************8
+        double [] EnergyLossArray = setEnergyLossArray(EnergyLossArrayfinal);
+        double [] distance = setDistance(distancefinal);
+        
     }
 
     // returns number of bins
@@ -105,10 +113,14 @@ class Voxel extends Parameters
     public double getContent(int zBin, int xBin, int yBin) {
         return voxels[zBin][xBin][yBin];
     }
-
     
-
+    public double [] setEnergyLossArray(double [] EnergyLossArray) {
+        return EnergyLossArray;
+    }
     
+    public double [] setDistance(double [] distance) {
+        return distance;
+    }
     
     
 //    double energy: the value of energy depositited. 
@@ -134,32 +146,38 @@ class Voxel extends Parameters
         
     }
     
-    // calculates absorbed dose for each Zslice
-
-    
     // Cara RBE class merge ////////////////////////////////////////////////////////////////////////////////////////////
     
-    // maybe put this method in Geometry?
+            // maybe put this method in Geometry?
     // returns total distance travelled by particle
-    public double findTrackLength(double [] stepsize) {
+    private double findTrackLength(double [] distance) {
         double totalTrackLength = 0;
         // summing all elements in array
-        for (int i = 0; i < stepsize.length; i++) {
-            totalTrackLength += stepsize[i];
+        for (int i = 0; i < distance.length; i++) {
+            totalTrackLength += distance[i];
         }
         return totalTrackLength;  
 }
+    
+    private double finddE (double [] EnergyLossArray) {
+        double totalEloss = 0;
+        // summing all elements in array
+        for (int i = 0; i < EnergyLossArray.length; i++) {
+            totalEloss += EnergyLossArray[i];
+        }
+        return totalEloss;
+    }
+
     // calculates LET fills voxels
-    public double [][][] getLET(Geometry Experiment, Particle p, double dist, int beamWeight, double [] stepsize){
+    public double [][][] getLET(double [] EnergyLossArray, double [] distance){
         
         // initialising LET Array
         double [][][] LET = new double [nbins][nbins][nbins];
 
         // calculating LET for each particle 
-        // how to call doELoss from Geometry Class? - or just command this to happen in geometry class?
-        double totalEloss = Experiment.doEloss(p, dist, beamWeight);
-        double distance = findTrackLength(stepsize);
-        double LETParticle = totalEloss/distance;
+        double totalEloss = finddE(EnergyLossArray);
+        double totaldistance = findTrackLength(distance);
+        double LETParticle = totalEloss/totaldistance;
 
         for(int zi = 0; zi<nbins; zi++){
             for(int xi = 0; xi<nbins;xi++){
@@ -174,10 +192,8 @@ class Voxel extends Parameters
     return LET;
 }
     
-        public void writeLET(String var, Particle p, double dist, int beamWeight, double [] stepsize, Geometry Experiment)
-    {
-        // calculate LET
-        double [][][] LET = getLET(Experiment, p, dist, beamWeight, stepsize);
+        public void writeLET(String var, double [][][] LET)
+        {
         
         String filename = var+".csv";
         PrintWriter outputFile;
