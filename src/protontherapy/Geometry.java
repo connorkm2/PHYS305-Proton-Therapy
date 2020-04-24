@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.Math;
 import java.util.Random;
+import java.util.Arrays;
 import static protontherapy.ProtonTherapy.randGen;
 
 class Geometry
@@ -291,15 +292,20 @@ class Geometry
             
             // calculate energy deposition
             lostE = LET*dist;
+//            System.out.println("toad");
+//            System.out.println(lostE);
             
             // calculate RBE
             RBE = 1.1;
             
             // calculate wR
-            Wr = 1.6*RBE - 0.6;
+            Wr = (1.6*RBE) - 0.6;
             
             // calculate equivalent dose energy
             equivDoseE = Wr*lostE;
+//            System.out.println("rabbit");
+//            System.out.println(equivDoseE);
+            
             
             // reduce particle energy
             p.reduceEnergy(lostE);
@@ -309,6 +315,7 @@ class Geometry
 
                 voxels.fill(lostE, p, beamWeight);
                 equivdosevoxels.fill(equivDoseE, p, volume);
+
 
             }
         }

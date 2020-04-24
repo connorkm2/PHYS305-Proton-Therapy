@@ -24,7 +24,7 @@ class Voxel extends Parameters
     
     //3D array of Voxels for generating z slice matrices
     private double[][][] voxels;
-//    private double[][][] equivdosevoxels;
+    private double[][][] equivdosevoxels;
     
     //DVH info
     private int DVHnbins;
@@ -57,7 +57,7 @@ class Voxel extends Parameters
         nfilled = 0;
         
         voxels = new double[nbins][nbins][nbins];
-//        equivdosevoxels = new double [nbins][nbins][nbins];
+        equivdosevoxels = new double [nbins][nbins][nbins];
                 
         // calculate the centre of each bin for all dimensions
         binCentre = new double[3][nbins];
