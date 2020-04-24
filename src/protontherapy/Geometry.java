@@ -44,6 +44,7 @@ class Geometry
     private MCS [] MultScatter;
     
     private Voxel voxels;
+    private Voxel equivdosevoxels;
 
     private double minfeaturesize;
     
@@ -74,6 +75,7 @@ class Geometry
         
 //        Set last parameter to true to output individual bragg peaks        
         voxels = new Voxel(100, binlow, binhigh, "Z Slices", true);
+        equivdosevoxels = new Voxel(100, binlow, binhigh, "Equiv Dose", true);
         
     }
 
@@ -277,18 +279,36 @@ class Geometry
     public void doEloss(Particle p, double dist, int beamWeight)
     {
         int volume = getVolume(p);
-
+        double LET;
+        double lostE;
+        double RBE;
+        double Wr;
+        double equivDoseE;
+        
         if (volume >= 1) {
-            double lostE = Eloss[volume].getEnergyLoss(p)*dist;
+            // calculates LET
+            LET =Eloss[volume].getEnergyLoss(p);
+            
+            // calculate energy deposition
+            lostE = LET*dist;
+            
+            // calculate RBE
+            RBE = 1.1;
+            
+            // calculate wR
+            Wr = 1.6*RBE - 0.6;
+            
+            // calculate equivalent dose energy
+            equivDoseE = Wr*lostE;
+            
+            // reduce particle energy
             p.reduceEnergy(lostE);
-            //System.out.println(p.momentum());
+
             if(isInVolume(p, 2)){
                 if(isInVolume(p, 4)){System.out.println("1");}
-//               System.out.println("Dog");
-//               System.out.println(lostE);
-//                double stdev = 0.1;
-//                double smearing = randGen.nextGaussian()*stdev;
+
                 voxels.fill(lostE, p, beamWeight);
+                equivdosevoxels.fill(equivDoseE, p, volume);
 
             }
         }
@@ -297,6 +317,7 @@ class Geometry
     public void writeEnergyHist(double depth, String filename){
         //voxels.writeToDisk(filename);
         voxels.writeData(depth, filename);
+        equivdosevoxels.writeDVH("equiv" + filename);
     }
     
     public void doMultScatter(Particle p, double dist)

@@ -24,6 +24,7 @@ class Voxel extends Parameters
     
     //3D array of Voxels for generating z slice matrices
     private double[][][] voxels;
+//    private double[][][] equivdosevoxels;
     
     //DVH info
     private int DVHnbins;
@@ -56,6 +57,7 @@ class Voxel extends Parameters
         nfilled = 0;
         
         voxels = new double[nbins][nbins][nbins];
+//        equivdosevoxels = new double [nbins][nbins][nbins];
                 
         // calculate the centre of each bin for all dimensions
         binCentre = new double[3][nbins];
@@ -65,7 +67,7 @@ class Voxel extends Parameters
             }
         }
         DVHnbins = 100;
-        DVHvalues = new double[2][DVHnbins];
+        DVHvalues = new double[3][DVHnbins];
         
         System.out.println(Arrays.deepToString(binCentre));
     }
@@ -121,6 +123,7 @@ class Voxel extends Parameters
         }
         
     }
+    
     
     // calculates absorbed dose for each Zslice
     public double [][] getAbsorbedDose(double [][][] voxels, 
@@ -227,7 +230,7 @@ class Voxel extends Parameters
             for(int xi = 0; xi<nbins;xi++){
                 for(int yi = 0; yi<nbins;yi++){
                     if(isInSphere(xi,yi,zi)){
-                        DVHTumour.fill((voxels[zi][xi][yi]/voxels[zi][50][50])*100);                      
+                        DVHTumour.fill((voxels[zi][xi][yi]/voxels[zi][50][50])*100); 
                     }else{
                         DVHBody.fill((voxels[zi][xi][yi]/voxels[zi][50][50])*100);
                     }
@@ -235,8 +238,9 @@ class Voxel extends Parameters
             }
         }
         Histogram[] hists = {DVHTumour, DVHBody};        
-        return hists;
+        return hists; 
     }
+    
         
     //-------------------------------------
     public void print()
@@ -260,9 +264,10 @@ class Voxel extends Parameters
         writeSOBP();
         writeProfile();
         writeZSlice(depth);
-        writeDVH();
+        writeDVH(filename);
         writeToDiskPP("bragg_peaks.csv");
         writeInfo();
+        //writeequivDoseDVH();
     }
     
 //    This fucntion outputs the individual pristine peaks of the simulation.
@@ -387,9 +392,9 @@ class Voxel extends Parameters
         System.out.println(filename+" written!");        
     }
     
-    public void writeDVH(){
+    public void writeDVH(String filename){
         double[][][] DVHs = generateOtherDVH();
-        String filename = "DVH.csv";
+//        String filename = "DVH.csv";
         PrintWriter outputFile;
         try{
             outputFile = new PrintWriter(filename);
@@ -404,6 +409,7 @@ class Voxel extends Parameters
         outputFile.close(); // close the output file
         System.out.println(filename+" written!"); 
     }
+    
     
     public void writeInfo(){
         //double TCP = this.getTCP(this.getDVHvalues(), this.getVoxelVolume());
